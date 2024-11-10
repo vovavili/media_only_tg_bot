@@ -1,5 +1,5 @@
 [MESSAGES CONTROL]
-# Telegram bot functions require a specific signature with unused arguments
+# Telegram bot functions require a specific signature with unused arguments.
 disable=unused-argument
 
 [FORMAT]
