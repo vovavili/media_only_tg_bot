@@ -51,7 +51,7 @@ settings = Settings()
 def setup_logger(
     level: Literal[0, 10, 20, 30, 40, 50] = 20,  # defaults to logging.INFO
     logger_name: str = "main",
-    max_bytes: int = 10 * 1024 * 1024,  # 10 MB
+    max_bytes: int = 10 * 1024**2,  # 10 MB
     backup_count: int = 5,
 ) -> logging.Logger:
     """
