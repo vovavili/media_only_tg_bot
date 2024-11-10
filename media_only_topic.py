@@ -10,6 +10,7 @@
 
 import logging
 from collections.abc import Callable
+from logging.handlers import RotatingFileHandler
 from functools import wraps
 from typing import Final, Literal
 
@@ -49,22 +50,31 @@ settings = Settings()
 def setup_logger(
     level: Literal[0, 10, 20, 30, 40, 50] = 20,  # defaults to logging.INFO
     logger_name: str = "main",
+    max_bytes: int = 10 * 1024 * 1024,  # 10 MB
+    backup_count: int = 5,
 ) -> logging.Logger:
     """
-    Initialize the logging system.
+    Initialize the logging system with rotation capability.
 
     Parameters:
         level: The logging level to use
         logger_name: The name to use for the logger (defaults to "main")
+        max_bytes: Maximum size of each log file in bytes (defaults to 10MB)
+        backup_count: Number of backup files to keep (defaults to 5)
 
     Returns:
         logging.Logger: The logger for the script.
     """
-    # Add file handler for errors and critical messages
-    file_handler = logging.FileHandler(
-        filename="export_log.log", mode="a", encoding="utf-8"
+    # Add a rotating file log for errors and critical messages
+    file_handler = RotatingFileHandler(
+        filename="export_log.log",
+        mode="a",
+        maxBytes=max_bytes,
+        backupCount=backup_count,
+        encoding="utf-8",
     )
     file_handler.setLevel(logging.ERROR)
+
     console_handler = logging.StreamHandler()
     # I don't need to see logging information on my production machine
     console_handler.setLevel(
