@@ -2,28 +2,20 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#   "python-dotenv>=1.0.1",
+#   "pydantic-settings>=2.6.1",
 #   "python-telegram-bot>=21.7",
 # ]
 # ///
-"""
-A script for a Telegram bot that deletes non-photo material from a group chat topic.
-
-Please make sure your .env contains the following variables:
-BOT_TOKEN - an API token for your bot
-TOPIC_ID - an ID for your group chat topic
-GROUP_CHAT_ID - an ID for your group chat
-"""
+"""A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
 import logging
-import os
 from collections.abc import Callable
 from functools import wraps
 from typing import Final, Literal
 
-from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
     "photo",
@@ -31,6 +23,24 @@ ALLOWED_MESSAGE_TYPES: Final = (
     "animation",
     "document",
 )
+
+
+class Settings(BaseSettings):
+    """
+    Please make sure your .env contains the following variables:
+    - BOT_TOKEN - an API token for your bot.
+    - TOPIC_ID - an ID for your group chat topic.
+    - GROUP_CHAT_ID - an ID for your group chat.
+    - ENVIRONMENT - if you intend on running this script on a VPS, this silences logging
+        information there.
+    """
+
+    BOT_TOKEN: str
+    TOPIC_ID: int
+    GROUP_CHAT_ID: int
+    ENVIRONMENT: Literal["production", "development"]
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
 def setup_logger(
@@ -48,13 +58,20 @@ def setup_logger(
         logging.Logger: The logger for the script.
     """
     # Add file handler for errors and critical messages
-    file_handler = logging.FileHandler(filename="export_log.log", mode="a")
+    file_handler = logging.FileHandler(
+        filename="export_log.log", mode="a", encoding="utf-8"
+    )
     file_handler.setLevel(logging.ERROR)
+    console_handler = logging.StreamHandler()
+    # I don't need to see logging information on my production machine
+    console_handler.setLevel(
+        logging.ERROR if Settings.ENVIRONMENT == "production" else logging.DEBUG
+    )
 
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=(logging.StreamHandler(), file_handler),
+        handlers=(console_handler, file_handler),
     )
 
     return logging.getLogger(logger_name)
@@ -86,14 +103,11 @@ async def only_media_messages(
     if (
         # Check if message is in a chat and topic we care about
         message is None
-        or message.chat.id != os.environ["GROUP_CHAT_ID"]
+        or message.chat.id != Settings.GROUP_CHAT_ID
         or (not message.is_topic_message)
-        or message.message_thread_id != os.environ["TOPIC_ID"]
+        or message.message_thread_id != Settings.TOPIC_ID
         # Check if message contains any allowed media types
-        or any(
-            hasattr(message, msg_type) and getattr(message, msg_type)
-            for msg_type in ALLOWED_MESSAGE_TYPES
-        )
+        or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
         return
 
@@ -109,9 +123,7 @@ async def only_media_messages(
 @log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
-    load_dotenv()
-
-    application = Application.builder().token(os.environ["BOT_TOKEN"]).build()
+    application = Application.builder().token(Settings.BOT_TOKEN).build()
     application.add_handler(
         MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages)
     )
