@@ -4,7 +4,7 @@
 import logging
 from collections.abc import Callable
 from logging.handlers import RotatingFileHandler
-from functools import wraps
+from functools import lru_cache, wraps
 from typing import Final, Literal
 
 from telegram import Update
@@ -34,13 +34,17 @@ class Settings(BaseSettings):
     GROUP_CHAT_ID: int
     ENVIRONMENT: Literal["production", "development"]
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
 
 
-settings = Settings()
+@lru_cache
+def get_settings() -> Settings:
+    """This needs to be lazily evaluated, otherwise pytest gets a circular import."""
+    return Settings()
 
 
-def setup_logger(
+@lru_cache(maxsize=1)
+def get_logger(
     level: Literal[0, 10, 20, 30, 40, 50] = 20,  # defaults to logging.INFO
     logger_name: str = "main",
     max_bytes: int = 10 * 1024**2,  # 10 MB
@@ -48,6 +52,7 @@ def setup_logger(
 ) -> logging.Logger:
     """
     Initialize the logging system with rotation capability.
+    This also needs to be lazily evaluated, otherwise pytest gets a circular import.
 
     Parameters:
         level: The logging level to use
@@ -60,7 +65,7 @@ def setup_logger(
     """
     # Add a rotating file log for errors and critical messages
     file_handler = RotatingFileHandler(
-        filename="export_log.log",
+        filename="../export_log.log",
         mode="a",
         maxBytes=max_bytes,
         backupCount=backup_count,
@@ -71,7 +76,7 @@ def setup_logger(
     console_handler = logging.StreamHandler()
     # I don't need to see logging information on my production machine
     console_handler.setLevel(
-        logging.ERROR if settings.ENVIRONMENT == "production" else logging.DEBUG
+        logging.ERROR if get_settings().ENVIRONMENT == "production" else logging.DEBUG
     )
 
     logging.basicConfig(
@@ -83,9 +88,6 @@ def setup_logger(
     return logging.getLogger(logger_name)
 
 
-logger = setup_logger()
-
-
 def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """A decorator to log an error in a function, in case it occurs."""
 
@@ -94,34 +96,35 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
         try:
             return func(*args, **kwargs)
         except Exception as err:
-            logger.error(err)
+            get_logger().error(err)
             raise err
 
     return wrapper
 
 
-async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log errors in an async way."""
-    logger.error(context.error)
+    get_logger().error(context.error)
 
 
-async def only_media_messages(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
+async def only_media_messages(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """For a specific group chat topic, allow only media messages."""
+    if not isinstance(update, Update):
+        raise ValueError("Invalid update object passed to the handle.")
+
     message = update.message
 
     if not (
         # Check if message is in a chat and topic we care about
         message is None
-        or message.chat.id != settings.GROUP_CHAT_ID
+        or message.chat.id != get_settings().GROUP_CHAT_ID
         or (not message.is_topic_message)
-        or message.message_thread_id != settings.TOPIC_ID
+        or message.message_thread_id != get_settings().TOPIC_ID
         # Check if message contains any allowed media types
         or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
         await message.delete()
-        logger.info(
+        get_logger().info(
             "Deleted message %s from user %s",
             message.message_id,
             message.from_user.username if message.from_user is not None else "",
@@ -131,13 +134,11 @@ async def only_media_messages(
 @log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
-    application = Application.builder().token(settings.BOT_TOKEN).build()
-    application.add_handler(
-        MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages)
-    )
+    application = Application.builder().token(get_settings().BOT_TOKEN).build()
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages))
     application.add_error_handler(error_handler)
 
-    logger.info("Starting bot...")
+    get_logger().info("Starting bot...")
     application.run_polling()
 
 
