@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     GROUP_CHAT_ID: int
     ENVIRONMENT: Literal["production", "development"]
 
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
 
 
 settings = Settings()
@@ -60,7 +60,7 @@ def setup_logger(
     """
     # Add a rotating file log for errors and critical messages
     file_handler = RotatingFileHandler(
-        filename="export_log.log",
+        filename="../export_log.log",
         mode="a",
         maxBytes=max_bytes,
         backupCount=backup_count,
@@ -105,9 +105,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     logger.error(context.error)
 
 
-async def only_media_messages(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
-) -> None:
+async def only_media_messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """For a specific group chat topic, allow only media messages."""
     message = update.message
 
@@ -132,9 +130,7 @@ async def only_media_messages(
 def main() -> None:
     """Run the bot for a media-only topic."""
     application = Application.builder().token(settings.BOT_TOKEN).build()
-    application.add_handler(
-        MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages)
-    )
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages))
     application.add_error_handler(error_handler)
 
     logger.info("Starting bot...")
