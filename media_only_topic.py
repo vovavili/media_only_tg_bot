@@ -7,7 +7,7 @@
 # ]
 # ///
 """
-A module for a Telegram bot that deletes non-photo material from a group chat topic.
+A script for a Telegram bot that deletes non-photo material from a group chat topic.
 
 Please make sure your .env contains the following variables:
 BOT_TOKEN - an API token for your bot
@@ -63,7 +63,7 @@ def setup_logger(
 logger = setup_logger()
 
 
-def log_error[**P, R](func: Callable[[P], R]) -> Callable[[P], R]:
+def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """A decorator to log an error in a function, in case it occurs."""
 
     @wraps(func)
@@ -77,13 +77,16 @@ def log_error[**P, R](func: Callable[[P], R]) -> Callable[[P], R]:
     return wrapper
 
 
-async def only_media_messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def only_media_messages(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """For a specific group chat topic, allow only media messages."""
     message = update.message
 
     if (
         # Check if message is in a chat and topic we care about
-        message.chat.id != os.environ["GROUP_CHAT_ID"]
+        message is None
+        or message.chat.id != os.environ["GROUP_CHAT_ID"]
         or (not message.is_topic_message)
         or message.message_thread_id != os.environ["TOPIC_ID"]
         # Check if message contains any allowed media types
@@ -98,7 +101,7 @@ async def only_media_messages(update: Update, context: ContextTypes.DEFAULT_TYPE
     logger.info(
         "Deleted message %s from user %s",
         message.message_id,
-        message.from_user.username,
+        message.from_user.username if message.from_user is not None else "",
     )
     return
 
