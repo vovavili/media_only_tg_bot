@@ -1,12 +1,4 @@
 #!/usr/bin/env python3
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "pydantic-settings>=2.6.1",
-#   "python-telegram-bot>=21.7",
-# ]
-# ///
-
 """A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
 import logging
