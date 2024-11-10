@@ -43,6 +43,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
 
+settings = Settings()
+
+
 def setup_logger(
     level: Literal[0, 10, 20, 30, 40, 50] = 20,  # defaults to logging.INFO
     logger_name: str = "main",
@@ -65,7 +68,7 @@ def setup_logger(
     console_handler = logging.StreamHandler()
     # I don't need to see logging information on my production machine
     console_handler.setLevel(
-        logging.ERROR if Settings.ENVIRONMENT == "production" else logging.DEBUG
+        logging.ERROR if settings.ENVIRONMENT == "production" else logging.DEBUG
     )
 
     logging.basicConfig(
@@ -103,9 +106,9 @@ async def only_media_messages(
     if not (
         # Check if message is in a chat and topic we care about
         message is None
-        or message.chat.id != Settings.GROUP_CHAT_ID
+        or message.chat.id != settings.GROUP_CHAT_ID
         or (not message.is_topic_message)
-        or message.message_thread_id != Settings.TOPIC_ID
+        or message.message_thread_id != settings.TOPIC_ID
         # Check if message contains any allowed media types
         or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
@@ -120,7 +123,7 @@ async def only_media_messages(
 @log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
-    application = Application.builder().token(Settings.BOT_TOKEN).build()
+    application = Application.builder().token(settings.BOT_TOKEN).build()
     application.add_handler(
         MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages)
     )
