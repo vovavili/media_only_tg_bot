@@ -100,7 +100,7 @@ async def only_media_messages(
     """For a specific group chat topic, allow only media messages."""
     message = update.message
 
-    if (
+    if not (
         # Check if message is in a chat and topic we care about
         message is None
         or message.chat.id != Settings.GROUP_CHAT_ID
@@ -109,15 +109,12 @@ async def only_media_messages(
         # Check if message contains any allowed media types
         or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
-        return
-
-    await message.delete()
-    logger.info(
-        "Deleted message %s from user %s",
-        message.message_id,
-        message.from_user.username if message.from_user is not None else "",
-    )
-    return
+        await message.delete()
+        logger.info(
+            "Deleted message %s from user %s",
+            message.message_id,
+            message.from_user.username if message.from_user is not None else "",
+        )
 
 
 @log_error
