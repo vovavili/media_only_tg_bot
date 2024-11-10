@@ -1,6 +1,7 @@
 [MESSAGES CONTROL]
 # Telegram bot functions require a specific signature with unused arguments.
-disable=unused-argument
+per-file-ignores=
+    media_only_topic/media_only_topic.py:unused-argument
 
 [FORMAT]
 max-line-length=100
