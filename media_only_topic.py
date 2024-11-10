@@ -2,7 +2,9 @@
 """A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
 import logging
+from collections.abc import Callable
 from logging.handlers import RotatingFileHandler
+from functools import wraps
 from typing import Final, Literal
 
 from telegram import Update
@@ -84,6 +86,20 @@ def setup_logger(
 logger = setup_logger()
 
 
+def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
+    """A decorator to log an error in a function, in case it occurs."""
+
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return func(*args, **kwargs)
+        except Exception as err:
+            logger.error(err)
+            raise err
+
+    return wrapper
+
+
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log errors in an async way."""
     logger.error(context.error)
@@ -112,6 +128,7 @@ async def only_media_messages(
         )
 
 
+@log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
     application = Application.builder().token(settings.BOT_TOKEN).build()
