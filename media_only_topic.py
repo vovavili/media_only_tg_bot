@@ -141,4 +141,5 @@ def main() -> None:
     application.run_polling()
 
 
-main()
+if __name__ == "__main__":
+    main()
