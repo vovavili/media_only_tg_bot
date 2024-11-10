@@ -6,6 +6,7 @@
 #   "python-telegram-bot>=21.7",
 # ]
 # ///
+
 """A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
 import logging
@@ -107,6 +108,11 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     return wrapper
 
 
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Log errors in an async way."""
+    logger.error(context.error)
+
+
 async def only_media_messages(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -137,6 +143,7 @@ def main() -> None:
     application.add_handler(
         MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages)
     )
+    application.add_error_handler(error_handler)
 
     logger.info("Starting bot...")
     application.run_polling()
