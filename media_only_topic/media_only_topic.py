@@ -17,6 +17,8 @@ ALLOWED_MESSAGE_TYPES: Final = (
     "video",
     "animation",
     "document",
+    "video_note",
+    "animation",
 )
 SMTP_PORT: Final = 587
 
