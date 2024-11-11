@@ -9,7 +9,7 @@ from typing import Final, Literal
 
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
-from pydantic import Field
+from pydantic import SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
@@ -18,6 +18,7 @@ ALLOWED_MESSAGE_TYPES: Final = (
     "animation",
     "document",
 )
+SMTP_PORT: Final = 587
 
 
 class Settings(BaseSettings):
@@ -28,32 +29,35 @@ class Settings(BaseSettings):
     - GROUP_CHAT_ID - an ID for your group chat.
     - ENVIRONMENT - if you intend on running this script on a VPS, this silences logging
         information there.
+
+    Required only in production:
+
     - SMTP_HOST - SMTP server address (e.g., smtp.gmail.com)
     - SMTP_USER - Email username/address for SMTP authentication
     - SMTP_PASSWORD - Email password or app-specific password
-    - EMAIL_FROM - Sender email address
-    - EMAIL_RECIPIENTS - Comma-separated list of recipient email addresses
     """
 
-    BOT_TOKEN: str
-    TOPIC_ID: int
-    GROUP_CHAT_ID: int
     ENVIRONMENT: Literal["production", "development"]
 
-    # Email configuration
-    SMTP_HOST: str
-    SMTP_USER: str
-    SMTP_PASSWORD: str
-    EMAIL_FROM: str
-    # Ellipsis marks a required field - https://docs.pydantic.dev/latest/concepts/models/#required-fields
-    EMAIL_RECIPIENTS: list[str] = Field(..., json_schema_extra={"format": "comma_separated"})
+    # Telegram bot configuration
+    BOT_TOKEN: SecretStr
+    TOPIC_ID: int
+    GROUP_CHAT_ID: int
 
-    model_config = SettingsConfigDict(
-        env_file="../.env",
-        env_file_encoding="utf-8",
-        # This will automatically convert comma-separated EMAIL_RECIPIENTS to a list
-        json_schema_extra={"email_recipients_separator": ","},
-    )
+    # Email configuration
+    SMTP_HOST: str | None = None
+    SMTP_USER: str | None = None
+    # If you're using Gmail, this needs to be an app password
+    SMTP_PASSWORD: SecretStr | None = None
+
+    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
+
+    @field_validator("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")
+    @classmethod
+    def validate_email_settings[T: str | SecretStr | None](cls, v: T, info: ValidationInfo) -> T:
+        if info.data["ENVIRONMENT"] == "production" and v is None:
+            raise ValueError(f"{info.field_name} is required in production.")
+        return v
 
 
 @lru_cache(maxsize=1)
@@ -84,37 +88,47 @@ def get_logger(
     """
     settings = get_settings()
 
-    # Add a rotating file log for errors and critical messages
-    file_handler = RotatingFileHandler(
-        filename="../export_log.log",
-        mode="a",
-        maxBytes=max_bytes,
-        backupCount=backup_count,
-        encoding="utf-8",
-    )
-    file_handler.setLevel(logging.ERROR)
-
     console_handler = logging.StreamHandler()
-    # I don't need to see logging information on my production machine
-    console_handler.setLevel(
-        logging.ERROR if settings.ENVIRONMENT == "production" else logging.DEBUG
-    )
+    handlers: list[logging.Handler] = [console_handler]
 
-    email_handler = SMTPHandler(
-        mailhost=settings.SMTP_HOST,
-        fromaddr=settings.EMAIL_FROM,
-        toaddrs=settings.EMAIL_RECIPIENTS,
-        subject="Application Error",
-        credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD),
-        # This enables TLS - https://docs.python.org/3/library/logging.handlers.html#smtphandler
-        secure=(),
-    )
-    email_handler.setLevel(logging.ERROR)
+    # In production, disable logging information, note errors in a rotating file log, and
+    # e-mail myself in case of an error.
+    if settings.ENVIRONMENT == "production":
+        # mypy doesn't seem to detect a @field_validator (or a for-loop) for some reason
+        if (
+            settings.SMTP_HOST is None
+            or settings.SMTP_USER is None
+            or settings.SMTP_PASSWORD is None
+        ):
+            raise TypeError("All email environment variables are required in production.")
+        console_handler.setLevel(logging.ERROR)
+
+        file_handler = RotatingFileHandler(
+            filename="../export_log.log",
+            mode="a",
+            maxBytes=max_bytes,
+            backupCount=backup_count,
+            encoding="utf-8",
+        )
+        file_handler.setLevel(logging.ERROR)
+
+        email_handler = SMTPHandler(
+            mailhost=(settings.SMTP_HOST, SMTP_PORT),
+            fromaddr=settings.SMTP_USER,
+            toaddrs=settings.SMTP_USER,
+            subject="Application Error",
+            credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
+            # This enables TLS - https://docs.python.org/3/library/logging.handlers.html#smtphandler
+            secure=(),
+        )
+        email_handler.setLevel(logging.ERROR)
+
+        handlers.extend((file_handler, email_handler))
 
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=(console_handler, file_handler, email_handler),
+        handlers=handlers,
     )
 
     return logging.getLogger(logger_name)
@@ -145,13 +159,14 @@ async def only_media_messages(update: object, context: ContextTypes.DEFAULT_TYPE
         raise ValueError("Invalid update object passed to the handle.")
 
     message = update.message
+    settings = get_settings()
 
     if not (
         # Check if message is in a chat and topic we care about
         message is None
-        or message.chat.id != get_settings().GROUP_CHAT_ID
+        or message.chat.id != settings.GROUP_CHAT_ID
         or (not message.is_topic_message)
-        or message.message_thread_id != get_settings().TOPIC_ID
+        or message.message_thread_id != settings.TOPIC_ID
         # Check if message contains any allowed media types
         or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
@@ -166,7 +181,8 @@ async def only_media_messages(update: object, context: ContextTypes.DEFAULT_TYPE
 @log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
-    application = Application.builder().token(get_settings().BOT_TOKEN).build()
+    bot_token = get_settings().BOT_TOKEN.get_secret_value()
+    application = Application.builder().token(bot_token).build()
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages))
     application.add_error_handler(error_handler)
 
