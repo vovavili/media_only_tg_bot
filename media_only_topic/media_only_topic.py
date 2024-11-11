@@ -18,7 +18,6 @@ ALLOWED_MESSAGE_TYPES: Final = (
     "animation",
     "document",
     "video_note",
-    "animation",
     "story",
     "sticker",
 )
