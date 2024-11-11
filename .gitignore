@@ -1,3 +1,3 @@
 .env
 export_log*.log
-.idea/
+.idea
