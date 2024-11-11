@@ -9,7 +9,7 @@ from typing import Final, Literal
 
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
-from pydantic import SecretStr, ValidationInfo, field_validator
+from pydantic import EmailStr, SecretStr, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     # Email configuration
     SMTP_HOST: str | None = None
-    SMTP_USER: str | None = None
+    SMTP_USER: EmailStr | None = None
     # If you're using Gmail, this needs to be an app password
     SMTP_PASSWORD: SecretStr | None = None
 
