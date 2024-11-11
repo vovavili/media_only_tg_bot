@@ -3,12 +3,13 @@
 
 import logging
 from collections.abc import Callable
-from logging.handlers import RotatingFileHandler
+from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import lru_cache, wraps
 from typing import Final, Literal
 
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
@@ -27,6 +28,11 @@ class Settings(BaseSettings):
     - GROUP_CHAT_ID - an ID for your group chat.
     - ENVIRONMENT - if you intend on running this script on a VPS, this silences logging
         information there.
+    - SMTP_HOST - SMTP server address (e.g., smtp.gmail.com)
+    - SMTP_USER - Email username/address for SMTP authentication
+    - SMTP_PASSWORD - Email password or app-specific password
+    - EMAIL_FROM - Sender email address
+    - EMAIL_RECIPIENTS - Comma-separated list of recipient email addresses
     """
 
     BOT_TOKEN: str
@@ -34,10 +40,23 @@ class Settings(BaseSettings):
     GROUP_CHAT_ID: int
     ENVIRONMENT: Literal["production", "development"]
 
-    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
+    # Email configuration
+    SMTP_HOST: str
+    SMTP_USER: str
+    SMTP_PASSWORD: str
+    EMAIL_FROM: str
+    # Ellipsis marks a required field - https://docs.pydantic.dev/latest/concepts/models/#required-fields
+    EMAIL_RECIPIENTS: list[str] = Field(..., json_schema_extra={"format": "comma_separated"})
+
+    model_config = SettingsConfigDict(
+        env_file="../.env",
+        env_file_encoding="utf-8",
+        # This will automatically convert comma-separated EMAIL_RECIPIENTS to a list
+        json_schema_extra={"email_recipients_separator": ","},
+    )
 
 
-@lru_cache
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     """This needs to be lazily evaluated, otherwise pytest gets a circular import."""
     return Settings()
@@ -63,6 +82,8 @@ def get_logger(
     Returns:
         logging.Logger: The logger for the script.
     """
+    settings = get_settings()
+
     # Add a rotating file log for errors and critical messages
     file_handler = RotatingFileHandler(
         filename="../export_log.log",
@@ -76,13 +97,24 @@ def get_logger(
     console_handler = logging.StreamHandler()
     # I don't need to see logging information on my production machine
     console_handler.setLevel(
-        logging.ERROR if get_settings().ENVIRONMENT == "production" else logging.DEBUG
+        logging.ERROR if settings.ENVIRONMENT == "production" else logging.DEBUG
     )
+
+    email_handler = SMTPHandler(
+        mailhost=settings.SMTP_HOST,
+        fromaddr=settings.EMAIL_FROM,
+        toaddrs=settings.EMAIL_RECIPIENTS,
+        subject="Application Error",
+        credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD),
+        # This enables TLS - https://docs.python.org/3/library/logging.handlers.html#smtphandler
+        secure=(),
+    )
+    email_handler.setLevel(logging.ERROR)
 
     logging.basicConfig(
         level=level,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=(console_handler, file_handler),
+        handlers=(console_handler, file_handler, email_handler),
     )
 
     return logging.getLogger(logger_name)
