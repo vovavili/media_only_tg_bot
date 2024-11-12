@@ -58,6 +58,7 @@ class Settings(BaseSettings):
     @field_validator("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")
     @classmethod
     def validate_email_settings[T: str | SecretStr | None](cls, v: T, info: ValidationInfo) -> T:
+        """We only send logging information on failure in production."""
         if info.data["ENVIRONMENT"] == "production" and v is None:
             raise ValueError(f"{info.field_name} is required in production.")
         return v
@@ -151,12 +152,12 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     return wrapper
 
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(_: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log errors in an async way."""
     get_logger().error(context.error)
 
 
-async def only_media_messages(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> None:
     """For a specific group chat topic, allow only media messages."""
     if not isinstance(update, Update):
         raise ValueError("Invalid update object passed to the handle.")
