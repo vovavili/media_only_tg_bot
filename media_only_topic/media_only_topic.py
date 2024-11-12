@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     @field_validator("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")
     @classmethod
     def validate_email_settings[T: str | SecretStr | None](cls, v: T, info: ValidationInfo) -> T:
-        """We only send logging information on failure in production."""
+        """We only email logging information on failure in production."""
         if info.data["ENVIRONMENT"] == "production" and v is None:
             raise ValueError(f"{info.field_name} is required in production.")
         return v
