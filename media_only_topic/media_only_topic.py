@@ -95,7 +95,7 @@ def get_logger(
     # being logged.
     if settings.ENVIRONMENT == "development":
         level = logging.INFO
-        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger(name="httpx").setLevel(logging.WARNING)
     # In production, disable logging information, note errors in a rotating file log, and
     # e-mail myself in case of an error.
     else:
