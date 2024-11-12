@@ -95,9 +95,13 @@ def get_logger(
     console_handler = logging.StreamHandler()
     handlers: list[logging.Handler] = [console_handler]
 
+    # In development, set higher logging level for httpx to avoid all GET and POST requests
+    # being logged
+    if settings.ENVIRONMENT == "development":
+        logging.getLogger("httpx").setLevel(logging.WARNING)
     # In production, disable logging information, note errors in a rotating file log, and
     # e-mail myself in case of an error.
-    if settings.ENVIRONMENT == "production":
+    else:
         # mypy doesn't seem to detect a @field_validator (or a for-loop) for some reason
         if (
             settings.SMTP_HOST is None
