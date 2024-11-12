@@ -72,8 +72,6 @@ def get_settings() -> Settings:
 
 @lru_cache(maxsize=1)
 def get_logger(
-    level: Literal[0, 10, 20, 30, 40, 50] = 20,  # defaults to logging.INFO
-    logger_name: str = "main",
     max_bytes: int = 10 * 1024**2,  # 10 MB
     backup_count: int = 5,
 ) -> logging.Logger:
@@ -82,8 +80,6 @@ def get_logger(
     This also needs to be lazily evaluated, otherwise pytest gets a circular import.
 
     Parameters:
-        level: The logging level to use
-        logger_name: The name to use for the logger (defaults to "main")
         max_bytes: Maximum size of each log file in bytes (defaults to 10MB)
         backup_count: Number of backup files to keep (defaults to 5)
 
@@ -98,6 +94,7 @@ def get_logger(
     # In development, set higher logging level for httpx to avoid all GET and POST requests
     # being logged.
     if settings.ENVIRONMENT == "development":
+        level = logging.INFO
         logging.getLogger("httpx").setLevel(logging.WARNING)
     # In production, disable logging information, note errors in a rotating file log, and
     # e-mail myself in case of an error.
@@ -109,8 +106,8 @@ def get_logger(
             or settings.SMTP_PASSWORD is None
         ):
             raise TypeError("All email environment variables are required in production.")
-        console_handler.setLevel(logging.ERROR)
 
+        level = logging.ERROR
         file_handler = RotatingFileHandler(
             filename="../export_log.log",
             mode="a",
@@ -118,8 +115,6 @@ def get_logger(
             backupCount=backup_count,
             encoding="utf-8",
         )
-        file_handler.setLevel(logging.ERROR)
-
         email_handler = SMTPHandler(
             mailhost=(settings.SMTP_HOST, SMTP_PORT),
             fromaddr=settings.SMTP_USER,
@@ -129,8 +124,6 @@ def get_logger(
             # This enables TLS - https://docs.python.org/3/library/logging.handlers.html#smtphandler
             secure=(),
         )
-        email_handler.setLevel(logging.ERROR)
-
         handlers.extend((file_handler, email_handler))
 
     logging.basicConfig(
@@ -139,7 +132,7 @@ def get_logger(
         handlers=handlers,
     )
 
-    return logging.getLogger(logger_name)
+    return logging.getLogger(name="main")
 
 
 def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
