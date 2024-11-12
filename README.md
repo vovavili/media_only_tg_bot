@@ -8,8 +8,8 @@ Please make sure your .env contains the following variables:
 - BOT_TOKEN - an API token for your bot.
 - TOPIC_ID - an ID for your group chat topic.
 - GROUP_CHAT_ID - an ID for your group chat.
-- ENVIRONMENT - if you intend on running this script on a VPS, this silences logging
-    information there.
+- ENVIRONMENT - if you intend on running this script on a VPS, this improves logging
+    information in your production system.
 
 Required only in production:
 
