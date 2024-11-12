@@ -9,7 +9,7 @@ from typing import Final, Literal
 
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
-from pydantic import EmailStr, SecretStr, ValidationInfo, field_validator
+from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
@@ -30,8 +30,8 @@ class Settings(BaseSettings):
     - BOT_TOKEN - an API token for your bot.
     - TOPIC_ID - an ID for your group chat topic.
     - GROUP_CHAT_ID - an ID for your group chat.
-    - ENVIRONMENT - if you intend on running this script on a VPS, this silences logging
-        information there.
+    - ENVIRONMENT - if you intend on running this script on a VPS, this improves logging
+        information in your production system.
 
     Required only in production:
 
@@ -53,15 +53,9 @@ class Settings(BaseSettings):
     # If you're using Gmail, this needs to be an app password
     SMTP_PASSWORD: SecretStr | None = None
 
-    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
-
-    @field_validator("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")
-    @classmethod
-    def validate_email_settings[T: str | SecretStr | None](cls, v: T, info: ValidationInfo) -> T:
-        """We only email logging information on failure in production."""
-        if info.data["ENVIRONMENT"] == "production" and v is None:
-            raise ValueError(f"{info.field_name} is required in production.")
-        return v
+    model_config = SettingsConfigDict(
+        env_file=("../.env", "../.env.prod"), env_file_encoding="utf-8"
+    )
 
 
 @lru_cache(maxsize=1)
@@ -95,18 +89,12 @@ def get_logger(
     # being logged.
     if settings.ENVIRONMENT == "development":
         level = logging.INFO
-        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger(name="httpx").setLevel(logging.WARNING)
+    elif settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
+        raise ValueError("All email environment variables are required in production.")
     # In production, disable logging information, note errors in a rotating file log, and
     # e-mail myself in case of an error.
     else:
-        # mypy doesn't seem to detect a @field_validator (or a for-loop) for some reason
-        if (
-            settings.SMTP_HOST is None
-            or settings.SMTP_USER is None
-            or settings.SMTP_PASSWORD is None
-        ):
-            raise TypeError("All email environment variables are required in production.")
-
         level = logging.ERROR
         file_handler = RotatingFileHandler(
             filename="../export_log.log",
@@ -188,7 +176,7 @@ def main() -> None:
     application.add_error_handler(error_handler)
 
     get_logger().info("Starting bot...")
-    application.run_polling(allowed_updates=("message",))
+    application.run_polling(allowed_updates=["message"])
 
 
 if __name__ == "__main__":
