@@ -96,7 +96,7 @@ def get_logger(
     handlers: list[logging.Handler] = [console_handler]
 
     # In development, set higher logging level for httpx to avoid all GET and POST requests
-    # being logged
+    # being logged.
     if settings.ENVIRONMENT == "development":
         logging.getLogger("httpx").setLevel(logging.WARNING)
     # In production, disable logging information, note errors in a rotating file log, and
