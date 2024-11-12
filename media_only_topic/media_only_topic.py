@@ -195,7 +195,7 @@ def main() -> None:
     application.add_error_handler(error_handler)
 
     get_logger().info("Starting bot...")
-    application.run_polling()
+    application.run_polling(allowed_updates=("message",))
 
 
 if __name__ == "__main__":
