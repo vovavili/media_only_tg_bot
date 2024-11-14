@@ -9,7 +9,7 @@ from typing import Final, Literal
 
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
-from pydantic import EmailStr, SecretStr, ValidationInfo, field_validator
+from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_MESSAGE_TYPES: Final = (
@@ -55,14 +55,6 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
 
-    @field_validator("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD")
-    @classmethod
-    def validate_email_settings[T: str | SecretStr | None](cls, v: T, info: ValidationInfo) -> T:
-        """We only email logging information on failure in production."""
-        if info.data["ENVIRONMENT"] == "production" and v is None:
-            raise ValueError(f"{info.field_name} is required in production.")
-        return v
-
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
@@ -99,14 +91,12 @@ def get_logger(
     # In production, disable logging information, note errors in a rotating file log, and
     # e-mail myself in case of an error.
     else:
-        # mypy doesn't seem to detect a @field_validator (or a for-loop) for some reason
         if (
             settings.SMTP_HOST is None
             or settings.SMTP_USER is None
             or settings.SMTP_PASSWORD is None
         ):
-            raise TypeError("All email environment variables are required in production.")
-
+            raise ValueError("All email environment variables are required in production.")
         level = logging.ERROR
         file_handler = RotatingFileHandler(
             filename="../export_log.log",
