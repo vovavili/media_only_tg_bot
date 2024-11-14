@@ -2,6 +2,7 @@
 """A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
 import logging
+import sys
 from collections.abc import Callable
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import lru_cache, wraps
@@ -113,6 +114,15 @@ def get_logger(
             secure=(),
         )
         handlers.extend((file_handler, email_handler))
+
+    # Adds color - https://stackoverflow.com/a/7995762/11010254
+    if sys.stderr.isatty():
+        logging.addLevelName(
+            logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING)
+        )
+        logging.addLevelName(
+            logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR)
+        )
 
     logging.basicConfig(
         level=level,
