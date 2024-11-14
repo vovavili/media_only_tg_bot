@@ -88,10 +88,10 @@ def get_logger(
     if settings.ENVIRONMENT == "development":
         level = logging.INFO
         logging.getLogger(name="httpx").setLevel(logging.WARNING)
-    # In production, disable logging information, note errors in a rotating file log, and
-    # e-mail myself in case of an error.
     elif settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
         raise ValueError("All email environment variables are required in production.")
+    # In production, disable logging information, note errors in a rotating file log, and
+    # e-mail myself in case of an error.
     else:
         level = logging.ERROR
         file_handler = RotatingFileHandler(
