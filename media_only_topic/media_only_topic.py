@@ -53,7 +53,9 @@ class Settings(BaseSettings):
     # If you're using Gmail, this needs to be an app password
     SMTP_PASSWORD: SecretStr | None = None
 
-    model_config = SettingsConfigDict(env_file="../.env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=("../.env", "../.env.prod"), env_file_encoding="utf-8"
+    )
 
 
 @lru_cache(maxsize=1)
