@@ -114,9 +114,7 @@ def get_logger() -> logging.Logger:
     # Adds color for terminal output only - https://stackoverflow.com/a/7995762/11010254
     if sys.stderr.isatty():
         for level in (logging.WARNING, logging.ERROR):
-            logging.addLevelName(
-                level, f"\033[1;{level // 10}1m{logging.getLevelName(level)}\033[1;0m"
-            )
+            logging.addLevelName(level, f"\033[1;{level+1}m{logging.getLevelName(level)}\033[1;0m")
 
     logging.basicConfig(
         level=level,
