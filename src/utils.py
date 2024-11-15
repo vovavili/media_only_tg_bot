@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     # Telegram bot configuration
     BOT_TOKEN: SecretStr
     TOPIC_ID: int
-    GROUP_CHAT_ID: int
+    GROUP_CHAT_ID: SecretStr
 
     # Email configuration
     SMTP_HOST: str | None = None
