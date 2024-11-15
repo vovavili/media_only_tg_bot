@@ -9,7 +9,6 @@ from functools import wraps, cache
 from typing import Final, Literal
 
 from telegram.ext import ContextTypes
-
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
