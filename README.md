@@ -14,6 +14,6 @@ Please make sure your .env contains the following variables. To find out how to 
 
 Required only in production:
 
-- SMTP_HOST - SMTP server address (e.g., smtp.gmail.com)
-- SMTP_USER - Email username/address for SMTP authentication
-- SMTP_PASSWORD - Email password or app-specific password
+- SMTP_HOST - SMTP server address (e.g., smtp.gmail.com).
+- SMTP_USER - Email username/address for SMTP authentication.
+- SMTP_PASSWORD - Email password or app-specific password (in case of something like Gmail).
