@@ -32,7 +32,7 @@ def settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     for key, value in test_env_vars.items():
         monkeypatch.setenv(key, value)
 
-    get_settings.cache_clear()
+    get_settings.cache_clear()  # Clear any cached settings
     return get_settings()
 
 
