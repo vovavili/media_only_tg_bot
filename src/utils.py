@@ -32,7 +32,7 @@ class FileHandlerConfig(IntEnum):
 class ANSICodes(StrEnum):
     """ANSI escape codes for terminal text formatting."""
 
-    BOLD_TEXT = "\033[1;"
+    BOLD = "\033[1;"
     END = "m"
     ALL = "0"
 
@@ -126,11 +126,11 @@ def get_logger() -> logging.Logger:
                 level,
                 "".join(
                     (
-                        ANSICodes.BOLD_TEXT,
+                        ANSICodes.BOLD,
                         str(level + 1),
                         ANSICodes.END,
                         logging.getLevelName(level),
-                        ANSICodes.BOLD_TEXT,
+                        ANSICodes.BOLD,
                         ANSICodes.ALL,
                         ANSICodes.END,
                     )
