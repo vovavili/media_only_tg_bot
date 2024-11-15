@@ -7,16 +7,12 @@ import pytest
 from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
-from media_only_topic.media_only_topic import (
-    ALLOWED_MESSAGE_TYPES,
-    Settings,
-    get_settings,
-    only_media_messages,
-)
+from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages
+from src.utils import get_settings, Settings
 
 
-@pytest.fixture(name="logger")
-def fixture_logger() -> Generator[Mock, None, None]:
+@pytest.fixture
+def logger() -> Generator[Mock, None, None]:
     """Mock logger for all tests and prevent file creation."""
     with patch("logging.getLogger") as mock_get_logger:
         mock_logger = Mock()
@@ -24,8 +20,8 @@ def fixture_logger() -> Generator[Mock, None, None]:
         yield mock_logger
 
 
-@pytest.fixture(name="settings")
-def fixture_test_env(monkeypatch: pytest.MonkeyPatch) -> Settings:
+@pytest.fixture
+def settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     """Set up test environment variables before importing the bot module."""
     test_env_vars = {
         "BOT_TOKEN": "test_token_123",
@@ -36,12 +32,12 @@ def fixture_test_env(monkeypatch: pytest.MonkeyPatch) -> Settings:
     for key, value in test_env_vars.items():
         monkeypatch.setenv(key, value)
 
-    get_settings.cache_clear()  # Clear any cached settings
+    get_settings.cache_clear()
     return get_settings()
 
 
-@pytest.fixture(name="prod_settings")
-def fixture_production_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
+@pytest.fixture
+def prod_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     """Set up production environment settings."""
     test_env_vars = {
         "BOT_TOKEN": "live_token_xyz",
@@ -56,8 +52,8 @@ def fixture_production_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     return get_settings()
 
 
-@pytest.fixture(name="message")
-def fixture_message(settings: Settings) -> Mock:
+@pytest.fixture
+def message(settings: Settings) -> Mock:
     """Create a mock message with the appropriate attributes."""
     message = Mock(spec=Message)
     message.chat = Mock(spec=Chat)
@@ -75,8 +71,8 @@ def fixture_message(settings: Settings) -> Mock:
     return message
 
 
-@pytest.fixture(name="context")
-def fixture_context() -> Mock:
+@pytest.fixture
+def context() -> Mock:
     """Create a mock context."""
     return Mock(spec=ContextTypes.DEFAULT_TYPE)
 
