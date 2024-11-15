@@ -111,7 +111,7 @@ def get_logger() -> logging.Logger:
         )
         handlers.extend((file_handler, email_handler))
 
-    # Adds color - https://stackoverflow.com/a/7995762/11010254
+    # Adds color for terminal output only - https://stackoverflow.com/a/7995762/11010254
     if sys.stderr.isatty():
         for level in (logging.WARNING, logging.ERROR):
             logging.addLevelName(
