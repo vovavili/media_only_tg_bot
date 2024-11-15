@@ -6,7 +6,7 @@ from typing import Final
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
 
-from src.logger import logger, log_error, settings, error_handler
+from src.utils import logger, log_error, settings, error_handler
 
 ALLOWED_MESSAGE_TYPES: Final = (
     "photo",

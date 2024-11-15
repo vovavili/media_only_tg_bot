@@ -1,4 +1,4 @@
-"""A module to create a comprehensive stdlib logger."""
+"""A module to create a comprehensive stdlib logger and parse the dotenv file."""
 
 import logging
 import sys
