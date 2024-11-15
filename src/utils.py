@@ -5,7 +5,7 @@ import sys
 from enum import IntEnum
 from collections.abc import Callable
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from functools import wraps
+from functools import wraps, lru_cache
 from typing import Final, Literal
 
 from telegram.ext import ContextTypes
@@ -63,9 +63,13 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    """Avoid issues with unit testing by lazy evaluation."""
+    return Settings()
 
 
+@lru_cache(maxsize=1)
 def get_logger() -> logging.Logger:
     """
     Initialize the logging system with rotation capability.
@@ -75,6 +79,8 @@ def get_logger() -> logging.Logger:
     """
     console_handler = logging.StreamHandler()
     handlers: list[logging.Handler] = [console_handler]
+
+    settings = get_settings()
 
     # In development, set higher logging level for httpx to avoid all GET and POST requests
     # being logged.
@@ -123,9 +129,6 @@ def get_logger() -> logging.Logger:
     return logging.getLogger(name="main")
 
 
-logger = get_logger()
-
-
 def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     """A decorator to log an error in a function, in case it occurs."""
 
@@ -134,7 +137,7 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
         try:
             return func(*args, **kwargs)
         except Exception as err:
-            logger.error(err)
+            get_logger().error(err)
             raise err
 
     return wrapper
@@ -142,4 +145,4 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
 
 async def error_handler(_: object, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Log errors in an async way."""
-    logger.error(context.error)
+    get_logger().error(context.error)

@@ -6,7 +6,7 @@ from typing import Final
 from telegram import Update
 from telegram.ext import Application, MessageHandler, ContextTypes, filters
 
-from src.utils import logger, log_error, settings, error_handler
+from src.utils import get_logger, log_error, get_settings, error_handler
 
 ALLOWED_MESSAGE_TYPES: Final = (
     "photo",
@@ -25,6 +25,7 @@ async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> N
         raise ValueError("Invalid update object passed to the handle.")
 
     message = update.message
+    settings = get_settings()
 
     if not (
         # Check if message is in a chat and topic we care about
@@ -36,7 +37,7 @@ async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> N
         or any(getattr(message, msg_type, False) for msg_type in ALLOWED_MESSAGE_TYPES)
     ):
         await message.delete()
-        logger.info(
+        get_logger().info(
             "Deleted message %s from user %s",
             message.message_id,
             message.from_user.username if message.from_user is not None else "",
@@ -46,12 +47,12 @@ async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> N
 @log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
-    bot_token = settings.BOT_TOKEN.get_secret_value()
+    bot_token = get_settings().BOT_TOKEN.get_secret_value()
     application = Application.builder().token(bot_token).build()
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, only_media_messages))
     application.add_error_handler(error_handler)
 
-    logger.info("Starting bot...")
+    get_logger().info("Starting bot...")
     application.run_polling(allowed_updates=["message"])
 
 
