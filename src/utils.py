@@ -14,8 +14,10 @@ from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SMTP_PORT: Final = 587
+
 BOLD_TEXT: Final = "\033[1;"
 END: Final = "m"
+ALL: Final = "0"
 
 
 class FileHandlerConfig(IntEnum):
@@ -117,7 +119,8 @@ def get_logger() -> logging.Logger:
     if sys.stderr.isatty():
         for level in (logging.WARNING, logging.ERROR):
             logging.addLevelName(
-                level, f"{BOLD_TEXT}{level + 1}{END}{logging.getLevelName(level)}{BOLD_TEXT}0{END}"
+                level,
+                f"{BOLD_TEXT}{level + 1}{END}{logging.getLevelName(level)}{BOLD_TEXT}{ALL}{END}",
             )
 
     logging.basicConfig(
