@@ -2,7 +2,7 @@
 
 import logging
 import sys
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from collections.abc import Callable
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import wraps, cache
@@ -14,10 +14,6 @@ from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SMTP_PORT: Final = 587
-
-BOLD_TEXT: Final = "\033[1;"
-END: Final = "m"
-ALL: Final = "0"
 
 
 class FileHandlerConfig(IntEnum):
@@ -31,6 +27,14 @@ class FileHandlerConfig(IntEnum):
 
     MAX_BYTES = 10 * 1024**2
     BACKUP_COUNT = 5
+
+
+class ANSICodes(StrEnum):
+    """ANSI escape codes for terminal text formatting."""
+
+    BOLD_TEXT = "\033[1;"
+    END = "m"
+    ALL = "0"
 
 
 class Settings(BaseSettings):
@@ -120,7 +124,17 @@ def get_logger() -> logging.Logger:
         for level in (logging.WARNING, logging.ERROR):
             logging.addLevelName(
                 level,
-                f"{BOLD_TEXT}{level + 1}{END}{logging.getLevelName(level)}{BOLD_TEXT}{ALL}{END}",
+                "".join(
+                    (
+                        ANSICodes.BOLD_TEXT,
+                        str(level + 1),
+                        ANSICodes.END,
+                        logging.getLevelName(level),
+                        ANSICodes.BOLD_TEXT,
+                        ANSICodes.ALL,
+                        ANSICodes.END,
+                    )
+                ),
             )
 
     logging.basicConfig(
