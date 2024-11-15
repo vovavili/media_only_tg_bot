@@ -5,7 +5,7 @@ import sys
 from enum import IntEnum
 from collections.abc import Callable
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from functools import wraps, lru_cache
+from functools import wraps, cache
 from typing import Final, Literal
 
 from telegram.ext import ContextTypes
@@ -63,13 +63,13 @@ class Settings(BaseSettings):
     )
 
 
-@lru_cache(maxsize=1)
+@cache
 def get_settings() -> Settings:
     """Avoid issues with unit testing by lazy evaluation."""
     return Settings()
 
 
-@lru_cache(maxsize=1)
+@cache
 def get_logger() -> logging.Logger:
     """
     Initialize the logging system with rotation capability.
