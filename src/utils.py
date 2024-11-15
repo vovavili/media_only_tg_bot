@@ -72,7 +72,10 @@ class Settings(BaseSettings):
 
 @cache
 def get_settings() -> Settings:
-    """Avoid issues with unit testing by lazy evaluation."""
+    """
+    Avoid issues with unit testing by lazy evaluation.
+    https://fastapi.tiangolo.com/advanced/settings/#creating-the-settings-only-once-with-lru_cache
+    """
     return Settings()
 
 
