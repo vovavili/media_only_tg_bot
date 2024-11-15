@@ -19,7 +19,7 @@ ALLOWED_MESSAGE_TYPES: Final = (
 )
 
 
-async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE, /) -> None:
     """For a specific group chat topic, allow only media messages."""
     if not isinstance(update, Update):
         raise ValueError("Invalid update object passed to the handle.")

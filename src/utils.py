@@ -143,6 +143,6 @@ def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
     return wrapper
 
 
-async def error_handler(_: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(_: object, context: ContextTypes.DEFAULT_TYPE, /) -> None:
     """Log errors in an async way."""
     get_logger().error(context.error)
