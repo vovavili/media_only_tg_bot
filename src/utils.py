@@ -113,12 +113,10 @@ def get_logger() -> logging.Logger:
 
     # Adds color - https://stackoverflow.com/a/7995762/11010254
     if sys.stderr.isatty():
-        logging.addLevelName(
-            logging.WARNING, f"\033[1;31m{logging.getLevelName(logging.WARNING)}\033[1;0m"
-        )
-        logging.addLevelName(
-            logging.ERROR, f"\033[1;41m{logging.getLevelName(logging.ERROR)}\033[1;0m"
-        )
+        for level in (logging.WARNING, logging.ERROR):
+            logging.addLevelName(
+                level, f"\033[1;{level // 10}1m{logging.getLevelName(level)}\033[1;0m"
+            )
 
     logging.basicConfig(
         level=level,
