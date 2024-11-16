@@ -67,7 +67,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: SecretStr | None = None
 
     model_config = SettingsConfigDict(
-        env_file=[s for s in map(find_dotenv, (".env", ".env.prod")) if s is not None],
+        env_file=[s for s in map(find_dotenv, (".env", ".env.prod")) if s],
         env_file_encoding="utf-8",
     )
 
