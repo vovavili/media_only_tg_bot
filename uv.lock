@@ -321,20 +321,19 @@ dependencies = [
 [package.optional-dependencies]
 dev = [
     { name = "mypy" },
-    { name = "pre-commit" },
+    { name = "pre-commit-uv" },
     { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-mypy-plugins" },
     { name = "ruff" },
-    { name = "tox" },
     { name = "tox-uv" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.13.0" },
-    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.0.1" },
+    { name = "pre-commit-uv", marker = "extra == 'dev'", specifier = ">=4.1.4" },
     { name = "pydantic", extras = ["email"], specifier = ">=2.9.2" },
     { name = "pydantic-settings", specifier = ">=2.6.1" },
     { name = "pylint", marker = "extra == 'dev'", specifier = ">=3.3.1" },
@@ -343,7 +342,6 @@ requires-dist = [
     { name = "pytest-mypy-plugins", marker = "extra == 'dev'", specifier = ">=3.1.2" },
     { name = "python-telegram-bot", specifier = ">=21.7" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.7.3" },
-    { name = "tox", marker = "extra == 'dev'", specifier = ">=4.23.2" },
     { name = "tox-uv", marker = "extra == 'dev'", specifier = ">=1.16.0" },
 ]
 
@@ -429,6 +427,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2e/c8/e22c292035f1bac8b9f5237a2622305bc0304e776080b246f3df57c4ff9f/pre_commit-4.0.1.tar.gz", hash = "sha256:80905ac375958c0444c65e9cebebd948b3cdb518f335a091a670a89d652139d2", size = 191678 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/16/8f/496e10d51edd6671ebe0432e33ff800aa86775d2d147ce7d43389324a525/pre_commit-4.0.1-py2.py3-none-any.whl", hash = "sha256:efde913840816312445dc98787724647c65473daefe420785f885e8ed9a06878", size = 218713 },
+]
+
+[[package]]
+name = "pre-commit-uv"
+version = "4.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pre-commit" },
+    { name = "uv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b1/6c/c3c1d01698c8abb0b546defc0304971fa7fb2ba84ad35587b9dad095d73f/pre_commit_uv-4.1.4.tar.gz", hash = "sha256:3db606a79b226127b27dbbd8381b78c0e30de3ac775a8492c576a68e9250535c", size = 6493 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f1/70/1b65f9118ef64f6ffe5d57a67170bbff25d4f4a3d1cb78e8ed3392e16114/pre_commit_uv-4.1.4-py3-none-any.whl", hash = "sha256:7f01fb494fa1caa5097d20a38f71df7cea0209197b2564699cef9b3f3aa9d135", size = 5578 },
 ]
 
 [[package]]
