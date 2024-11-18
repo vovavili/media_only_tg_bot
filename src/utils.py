@@ -1,5 +1,7 @@
 """A module to create a comprehensive stdlib logger and parse the dotenv file."""
 
+from __future__ import annotations
+
 import logging
 import sys
 from enum import IntEnum, StrEnum

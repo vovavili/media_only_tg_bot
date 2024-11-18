@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """A script for a Telegram bot that deletes non-photo material from a group chat topic."""
 
+from __future__ import annotations
+
 from typing import Final
 
 from telegram import Update
