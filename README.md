@@ -7,6 +7,7 @@ To run this script with the right Python version and all the dependencies, pleas
 ```
 git clone https://github.com/vovavili/media_only_tg_bot.git
 cd media_only_tg_bot
+# Make sure to create a .env or .env.prod file at this step
 uv run -m src.media_only_topic
 ```
 
