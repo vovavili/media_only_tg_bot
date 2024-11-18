@@ -4,6 +4,7 @@ import logging
 import sys
 from enum import IntEnum, StrEnum
 from collections.abc import Callable
+from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import wraps, cache
 from typing import Final, Literal
@@ -66,7 +67,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: SecretStr | None = None
 
     model_config = SettingsConfigDict(
-        env_file=("../.env", "../.env.prod"),
+        env_file=[(Path(__file__).resolve().parents[1] / e) for e in (".env", ".env.prod")],
         env_file_encoding="utf-8",
     )
 
