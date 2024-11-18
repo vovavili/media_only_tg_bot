@@ -11,7 +11,6 @@ from typing import Final, Literal
 from telegram.ext import ContextTypes
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from dotenv import find_dotenv
 
 SMTP_PORT: Final = 587
 
@@ -58,7 +57,7 @@ class Settings(BaseSettings):
     # Telegram bot configuration
     BOT_TOKEN: SecretStr
     TOPIC_ID: int
-    GROUP_CHAT_ID: SecretStr
+    GROUP_CHAT_ID: int
 
     # Email configuration
     SMTP_HOST: str | None = None
@@ -67,8 +66,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: SecretStr | None = None
 
     model_config = SettingsConfigDict(
-        # Otherwise, dotenv file might not get found on a production machine
-        env_file=[s for s in map(find_dotenv, (".env", ".env.prod")) if s],
+        env_file=("../.env", "../.env.prod"),
         env_file_encoding="utf-8",
     )
 

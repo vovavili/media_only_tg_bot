@@ -30,7 +30,7 @@ async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> N
     if not (
         # Check if message is in a chat and topic we care about
         message is None
-        or message.chat.id != settings.GROUP_CHAT_ID.get_secret_value()
+        or message.chat.id != settings.GROUP_CHAT_ID
         or (not message.is_topic_message)
         or message.message_thread_id != settings.TOPIC_ID
         # Check if message contains any allowed media types
