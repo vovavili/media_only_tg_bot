@@ -34,7 +34,7 @@ uv run -m src.media_only_topic
 Prior to running the script, please make sure your `.env` or `.env.prod` file contains the following variables. To find out 
 how to get them, please refer to the 
 [following guide](https://gist.github.com/nafiesl/4ad622f344cd1dc3bb1ecbe468ff9f8a):
-- **9BOT_TOKEN** - an API token for your bot.
+- **BOT_TOKEN** - an API token for your bot.
 - **TOPIC_ID** - an ID for your group chat topic.
 - **GROUP_CHAT_ID** - an ID for your group chat.
 - **ENVIRONMENT** - if you intend on running this script on a VPS, this improves logging
