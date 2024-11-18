@@ -1,5 +1,8 @@
 # Telegram Bot - Media-Only Group Chat Topic
 
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/vovavili/media_only_tg_bot/master.svg)](https://results.pre-commit.ci/latest/github/vovavili/media_only_tg_bot/master)
+
+
 A script for a Telegram bot that deletes non-photo material from a group chat topic.
 
 ### Installation
