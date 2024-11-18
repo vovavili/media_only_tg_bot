@@ -8,9 +8,9 @@ To run this script with the right Python version and all the dependencies, pleas
 
 Install uv (and git) on Windows 11+ with PowerShell:
 
-```shell
-Set-ExecutionPolicy RemoteSigned -scope CurrentUser
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```powershell
+irm https://astral.sh/uv/install.ps1 | iex
+$env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
 # git doesn't come with Windows 11 by default
 winget install -e --id Git.Git
 ```
@@ -19,6 +19,7 @@ On macOS or Linux:
 
 ```shell
 curl -LsSf https://astral.sh/uv/install.sh | sh
+source $HOME/.local/bin/env
 ```
 
 Then, run the script:
