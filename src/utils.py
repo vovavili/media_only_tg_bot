@@ -14,6 +14,7 @@ from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SMTP_PORT: Final = 587
+ROOT_DIR: Final = Path(__file__).resolve().parents[1]
 
 
 class FileHandlerConfig(IntEnum):
@@ -67,7 +68,7 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: SecretStr | None = None
 
     model_config = SettingsConfigDict(
-        env_file=[(Path(__file__).resolve().parents[1] / e) for e in (".env", ".env.prod")],
+        env_file=[(ROOT_DIR / e) for e in (".env", ".env.prod")],
         env_file_encoding="utf-8",
     )
 
@@ -106,7 +107,7 @@ def get_logger() -> logging.Logger:
     else:
         level = logging.ERROR
         file_handler = RotatingFileHandler(
-            filename="../export_log.log",
+            filename=ROOT_DIR / "export_log.log",
             mode="a",
             maxBytes=FileHandlerConfig.MAX_BYTES,
             backupCount=FileHandlerConfig.BACKUP_COUNT,
