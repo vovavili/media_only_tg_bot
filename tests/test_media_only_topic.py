@@ -9,7 +9,7 @@ import pytest
 from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
-from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages
+from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages, main
 from src.utils import get_settings, Settings
 
 
@@ -117,3 +117,111 @@ async def test_production_environment(
     await only_media_messages(update, context)
 
     message.delete.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_invalid_update_object(context: Mock) -> None:
+    """Test that an invalid update object raises ValueError."""
+    with pytest.raises(ValueError, match="Invalid update object passed to the handle."):
+        await only_media_messages("not_an_update", context)
+
+
+@pytest.mark.asyncio
+async def test_none_message(context: Mock) -> None:
+    """Test handling of None message."""
+    update = Update(update_id=1, message=None)
+    # Should not raise any exception
+    await only_media_messages(update, context)
+
+
+@pytest.mark.asyncio
+async def test_wrong_chat_id(message: Mock, context: Mock, settings: Settings) -> None:
+    """Test message in wrong chat."""
+    message.chat.id = settings.GROUP_CHAT_ID + 1  # Different chat ID
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
+
+    await only_media_messages(update, context)
+    message.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_non_topic_message(message: Mock, context: Mock) -> None:
+    """Test non-topic message."""
+    message.is_topic_message = False
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
+
+    await only_media_messages(update, context)
+    message.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_wrong_topic_id(message: Mock, context: Mock, settings: Settings) -> None:
+    """Test message in wrong topic."""
+    message.message_thread_id = settings.TOPIC_ID + 1  # Different topic ID
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
+
+    await only_media_messages(update, context)
+    message.delete.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_message_without_user(message: Mock, context: Mock) -> None:
+    """Test handling of message without user information."""
+    message.from_user = None
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
+
+    await only_media_messages(update, context)
+    message.delete.assert_called_once()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "media_type", ["video", "animation", "document", "video_note", "story", "sticker"]
+)
+async def test_allowed_media_types(
+    message: Mock, context: Mock, settings: Settings, media_type: str
+) -> None:
+    """Test that all allowed media types are not deleted."""
+    setattr(message, media_type, True)
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
+
+    await only_media_messages(update, context)
+    message.delete.assert_not_called()
+
+
+@patch("src.media_only_topic.Application")
+@patch("src.media_only_topic.MessageHandler")
+@patch("src.media_only_topic.get_settings")
+@patch("src.media_only_topic.get_logger")
+def test_main(
+    mock_get_logger: Mock,
+    mock_get_settings: Mock,
+    mock_message_handler: Mock,
+    mock_application: Mock,
+) -> None:
+    """Test the main function."""
+    # Setup mocks
+    mock_logger = Mock()
+    mock_get_logger.return_value = mock_logger
+
+    mock_settings = Mock()
+    mock_settings.BOT_TOKEN.get_secret_value.return_value = "test_token"
+    mock_get_settings.return_value = mock_settings
+
+    mock_app = Mock()
+    mock_application.builder.return_value.token.return_value.build.return_value = mock_app
+
+    # Run main
+    main()
+
+    # Verify
+    mock_application.builder.assert_called_once()
+    mock_app.add_handler.assert_called_once()
+    mock_app.add_error_handler.assert_called_once()
+    mock_app.run_polling.assert_called_once_with(allowed_updates=["message"])
+    mock_logger.info.assert_called_with("Starting bot...")
