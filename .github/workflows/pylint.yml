@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --system .
+        uv pip install --system ".[test]"
         uv pip install --system pylint
 
     - name: Analysing the code with pylint
