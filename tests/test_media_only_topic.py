@@ -1,4 +1,4 @@
-"""Unit tests for the script."""
+"""Unit tests for the main script."""
 
 from __future__ import annotations
 
@@ -10,11 +10,11 @@ from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
 from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages, main
-from src.utils import get_settings, Settings
+from src.utils import Settings
 
 
-@pytest.fixture
-def logger() -> Generator[Mock, None, None]:
+@pytest.fixture(name="logger")
+def fixture_logger() -> Generator[Mock, None, None]:
     """Mock logger for all tests and prevent file creation."""
     with patch("logging.getLogger") as mock_get_logger:
         mock_logger = Mock()
@@ -22,40 +22,24 @@ def logger() -> Generator[Mock, None, None]:
         yield mock_logger
 
 
-@pytest.fixture
-def settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
-    """Set up test environment variables before importing the bot module."""
-    test_env_vars = {
-        "BOT_TOKEN": "test_token_123",
-        "TOPIC_ID": "42",
-        "GROUP_CHAT_ID": "123456",
-        "ENVIRONMENT": "development",
-    }
-    for key, value in test_env_vars.items():
-        monkeypatch.setenv(key, value)
+@pytest.mark.asyncio
+async def test_message_deletion_logging(message: Mock, context: Mock, logger: Mock) -> None:
+    """Test that message deletion is properly logged."""
+    message.delete = AsyncMock()
+    update = Update(update_id=1, message=message)
 
-    get_settings.cache_clear()  # Clear any cached settings
-    return get_settings()
+    await only_media_messages(update, context)
 
-
-@pytest.fixture
-def prod_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
-    """Set up production environment settings."""
-    test_env_vars = {
-        "BOT_TOKEN": "live_token_xyz",
-        "TOPIC_ID": "100",
-        "GROUP_CHAT_ID": "987654",
-        "ENVIRONMENT": "production",
-    }
-    for key, value in test_env_vars.items():
-        monkeypatch.setenv(key, value)
-
-    get_settings.cache_clear()
-    return get_settings()
+    message.delete.assert_called_once()
+    logger.info.assert_called_once_with(
+        "Deleted message %s from user %s",
+        message.message_id,
+        message.from_user.username,
+    )
 
 
-@pytest.fixture
-def message(settings: Settings) -> Mock:
+@pytest.fixture(name="message")
+def fixture_message(settings: Settings) -> Mock:
     """Create a mock message with the appropriate attributes."""
     message = Mock(spec=Message)
     message.chat = Mock(spec=Chat)
@@ -73,14 +57,14 @@ def message(settings: Settings) -> Mock:
     return message
 
 
-@pytest.fixture
-def context() -> Mock:
+@pytest.fixture(name="context")
+def fixture_context() -> Mock:
     """Create a mock context."""
     return Mock(spec=ContextTypes.DEFAULT_TYPE)
 
 
 @pytest.mark.asyncio
-async def test_text_message_deleted(message: Mock, context: Mock, settings: Settings) -> None:
+async def test_text_message_deleted(message: Mock, context: Mock) -> None:
     """Test that a text message gets deleted."""
     message.delete = AsyncMock()
     update = Update(update_id=1, message=message)
@@ -91,7 +75,7 @@ async def test_text_message_deleted(message: Mock, context: Mock, settings: Sett
 
 
 @pytest.mark.asyncio
-async def test_photo_message_kept(message: Mock, context: Mock, settings: Settings) -> None:
+async def test_photo_message_kept(message: Mock, context: Mock) -> None:
     """Test that a photo message is not deleted."""
     message.photo = [Mock(spec=PhotoSize)]
     message.delete = AsyncMock()
@@ -180,11 +164,9 @@ async def test_message_without_user(message: Mock, context: Mock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "media_type", ["video", "animation", "document", "video_note", "story", "sticker"]
+    "media_type", ("video", "animation", "document", "video_note", "story", "sticker")
 )
-async def test_allowed_media_types(
-    message: Mock, context: Mock, settings: Settings, media_type: str
-) -> None:
+async def test_allowed_media_types(message: Mock, context: Mock, media_type: str) -> None:
     """Test that all allowed media types are not deleted."""
     setattr(message, media_type, True)
     message.delete = AsyncMock()
@@ -201,7 +183,7 @@ async def test_allowed_media_types(
 def test_main(
     mock_get_logger: Mock,
     mock_get_settings: Mock,
-    mock_message_handler: Mock,
+    _: Mock,
     mock_application: Mock,
 ) -> None:
     """Test the main function."""

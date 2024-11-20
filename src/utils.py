@@ -9,11 +9,13 @@ from collections.abc import Callable
 from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import wraps, cache
-from typing import Final, Literal
+from typing import Final, Literal, TYPE_CHECKING
 
-from telegram.ext import ContextTypes
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+if TYPE_CHECKING:
+    from telegram.ext import ContextTypes
 
 SMTP_PORT: Final = 587
 ROOT_DIR: Final = Path(__file__).resolve().parents[1]
