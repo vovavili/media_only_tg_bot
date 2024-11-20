@@ -2,3 +2,6 @@
 export_log*.log
 .idea
 .coverage
+.coverage.*
+coverage.xml
+htmlcov/
