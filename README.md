@@ -53,4 +53,4 @@ Required only in production, to send an email message on failure:
 [Gmail](https://support.google.com/mail/answer/185833?hl=en)).
 
 Based on my experience, this script runs on [PythonAnywhere](https://www.pythonanywhere.com/)'s free tier just fine, 
-though your mileage might very.
+though for particularly active group chats it might be too limited.
