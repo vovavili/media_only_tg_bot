@@ -33,7 +33,7 @@ jobs:
 
       - name: Install tox-uv and dependencies
         run: |
-          uv pip install tox-uv
+          uv tool install tox --with tox-uv
           uv pip install -e ".[test]"
 
       - name: Run tests with tox-uv
