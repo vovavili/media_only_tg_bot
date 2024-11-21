@@ -28,7 +28,6 @@ dev = [
     "ruff>=0.7.3",
     "mypy>=1.13.0",
     "pre-commit-uv>=4.1.4",
-    "tox-uv>=1.16.0",
 ]
 [tool.mypy]
 plugins = ['pydantic.mypy']
