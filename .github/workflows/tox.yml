@@ -26,15 +26,10 @@ jobs:
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
-      - name: Install tox-uv and dependencies
+      - name: Install dependencies
         run: |
-          uv tool install tox --with tox-uv
-          tox r -e py312
-          tox --runner virtualenv r -e py312
-
-      - name: Install required dependencies
-        run: |
-          uv pip install -e ".[test]"
+          uv pip install --system ".[test]"
+          uv pip install --system tox
 
       - name: Run tests with tox-uv
         run: tox -e py
