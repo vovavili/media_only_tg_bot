@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 class ColorFormatter(logging.Formatter):
     """Formatter adding colors to console output."""
 
-    GREY = "38"
+    GREY: Final = "38"
     YELLOW: Final = "33"
     RED: Final = "31"
     BOLD: Final = ";1"
