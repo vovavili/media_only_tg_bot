@@ -96,6 +96,8 @@ class ColorFormatter(logging.Formatter):
         }
 
     def format(self, record: logging.LogRecord) -> str:
+        """Overwrite the parent 'format' method to format the specified record as text with
+        appropriate color coding."""
         log_fmt = self.get_formats().get(record.levelno, self.BASE_FORMAT)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
