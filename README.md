@@ -51,3 +51,6 @@ Required only in production, to send an email message on failure:
 - **SMTP_USER** - Email username/address for SMTP authentication.
 - **SMTP_PASSWORD** - Email password or app-specific password (in case of something like 
 [Gmail](https://support.google.com/mail/answer/185833?hl=en)).
+
+Based on my experience, this script runs on [PythonAnywhere](https://www.pythonanywhere.com/)'s free tier just fine, 
+though your mileage might very.
