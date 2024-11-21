@@ -23,12 +23,12 @@ test = [
     "pytest-asyncio>=0.24.0",
     "pytest-mypy-plugins>=3.1.2",
     "pytest-cov>=6.0.0",
-    "tox-uv>=1.16.0",
 ]
 dev = [
     "ruff>=0.7.3",
     "mypy>=1.13.0",
     "pre-commit-uv>=4.1.4",
+    "tox-uv>=1.16.0",
 ]
 [tool.mypy]
 plugins = ['pydantic.mypy']
