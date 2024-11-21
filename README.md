@@ -11,6 +11,9 @@ A script for a Telegram bot that deletes non-photo material from a group chat to
 
 To run this script with the right Python version and all the dependencies, please use [uv](https://docs.astral.sh/uv/):
 
+<details>
+<summary>Installation instructions for uv</summary>
+
 Install uv (and git) on Windows 11+ with PowerShell:
 
 ```powershell
@@ -26,6 +29,14 @@ On macOS or Linux:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
 ```
+
+Or, if you only have access to Python (as is the case for PythonAnywhere's free tier):
+
+```shell
+pip install --upgrade uv 
+```
+
+</details>
 
 Then, run the script:
 
