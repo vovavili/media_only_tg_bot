@@ -2,6 +2,7 @@
 
 ![Tests](https://github.com/vovavili/media_only_tg_bot/actions/workflows/tox.yml/badge.svg)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/vovavili/media_only_tg_bot/master.svg)](https://results.pre-commit.ci/latest/github/vovavili/media_only_tg_bot/master)
+[![codecov](https://codecov.io/github/vovavili/media_only_tg_bot/branch/master/graph/badge.svg?token=5QN2AD5DBW)](https://codecov.io/github/vovavili/media_only_tg_bot)
 
 
 A script for a Telegram bot that deletes non-photo material from a group chat topic.
