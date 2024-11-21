@@ -126,6 +126,7 @@ def get_logger() -> logging.Logger:
     # Create console handler with color formatting
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(ColorFormatter())
+    handlers: list[logging.Handler] = [console_handler]
 
     settings = get_settings()
 
@@ -133,36 +134,37 @@ def get_logger() -> logging.Logger:
     if settings.ENVIRONMENT == "development":
         logger.setLevel(logging.INFO)
         logging.getLogger(name="httpx").setLevel(logging.WARNING)
-        logger.addHandler(console_handler)
-        return logger
-    if settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
+    elif settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
         raise ValueError("All email environment variables are required in production.")
-    logger.setLevel(logging.ERROR)
+    else:
+        logger.setLevel(logging.ERROR)
 
-    # Create file handler with standard formatting
-    file_handler = RotatingFileHandler(
-        filename=ROOT_DIR / "export_log.log",
-        mode="a",
-        maxBytes=FileHandlerConfig.MAX_BYTES,
-        backupCount=FileHandlerConfig.BACKUP_COUNT,
-        encoding="utf-8",
-    )
-    file_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
+        # Create file handler with standard formatting
+        file_handler = RotatingFileHandler(
+            filename=ROOT_DIR / "export_log.log",
+            mode="a",
+            maxBytes=FileHandlerConfig.MAX_BYTES,
+            backupCount=FileHandlerConfig.BACKUP_COUNT,
+            encoding="utf-8",
+        )
+        file_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
 
-    # Create email handler with standard formatting
-    email_handler = SMTPHandler(
-        mailhost=(settings.SMTP_HOST, SMTP_PORT),
-        fromaddr=settings.SMTP_USER,
-        toaddrs=settings.SMTP_USER,
-        subject="Application Error",
-        credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
-        secure=(),
-    )
-    email_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
+        # Create email handler with standard formatting
+        email_handler = SMTPHandler(
+            mailhost=(settings.SMTP_HOST, SMTP_PORT),
+            fromaddr=settings.SMTP_USER,
+            toaddrs=settings.SMTP_USER,
+            subject="Application Error",
+            credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
+            secure=(),
+        )
+        email_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
+
+        handlers.extend((file_handler, email_handler))
 
     # Remove any existing handlers and add new ones
     logger.handlers.clear()
-    for handler in (console_handler, file_handler, email_handler):
+    for handler in handlers:
         logger.addHandler(handler)
 
     return logger
