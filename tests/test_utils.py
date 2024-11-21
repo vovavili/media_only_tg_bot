@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import sys
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from unittest.mock import MagicMock, patch
 from typing import Final, Generator, Never
@@ -11,7 +10,7 @@ from typing import Final, Generator, Never
 import pytest
 
 from src.utils import (
-    ANSICodes,
+    ColorFormatter,
     FileHandlerConfig,
     Settings,
     get_logger,
@@ -42,14 +41,14 @@ def fixture_email_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 @pytest.fixture(autouse=True)
 def fixture_reset_logging() -> Generator[None, None, None]:
     """Reset logging configuration before each test."""
-    root = logging.getLogger()
+    logger = logging.getLogger("main")
     # Store original handlers
-    original_handlers = root.handlers.copy()
+    original_handlers = logger.handlers.copy()
     # Clear all handlers
-    root.handlers.clear()
+    logger.handlers.clear()
     yield
     # Restore to original state
-    root.handlers = original_handlers
+    logger.handlers = original_handlers
 
 
 def test_filehandler_config() -> None:
@@ -58,11 +57,20 @@ def test_filehandler_config() -> None:
     assert FileHandlerConfig.BACKUP_COUNT.value == 5
 
 
-def test_ansi_codes() -> None:
-    """Test ANSICodes enum values."""
-    assert ANSICodes.BOLD.value == "\033[1;"
-    assert ANSICodes.END.value == "m"
-    assert ANSICodes.ALL.value == "0"
+def test_color_formatter() -> None:
+    """Test ColorFormatter functionality."""
+    formatter = ColorFormatter()
+    formats = formatter.get_formats()
+
+    # Test that all log levels have appropriate formats
+    assert all(isinstance(fmt, str) for fmt in formats.values())
+    assert all(ColorFormatter.ESCAPE in fmt for fmt in formats.values())
+    assert all(ColorFormatter.RESET in fmt for fmt in formats.values())
+
+    # Test specific colors for different levels
+    assert ColorFormatter.RED in formats[logging.ERROR]
+    assert ColorFormatter.YELLOW in formats[logging.WARNING]
+    assert ColorFormatter.GREY in formats[logging.INFO]
 
 
 def test_settings_development(settings: Settings) -> None:
@@ -88,24 +96,16 @@ def test_settings_production(prod_settings: Settings) -> None:
 def test_get_logger_development() -> None:
     """Test logger configuration in development environment."""
     get_logger.cache_clear()
+    logger = get_logger()
 
-    with (
-        patch("src.utils.RotatingFileHandler"),
-        patch("src.utils.SMTPHandler"),
-        patch("logging.basicConfig") as mock_basic_config,
-    ):
-        _ = get_logger()
+    assert logger.level == logging.INFO
+    assert len(logger.handlers) == 1
+    assert isinstance(logger.handlers[0], logging.StreamHandler)
+    assert isinstance(logger.handlers[0].formatter, ColorFormatter)
 
-        # Instead of checking handlers directly, verify basicConfig was called correctly
-        mock_basic_config.assert_called_once()
-        config_args = mock_basic_config.call_args[1]
-        assert config_args["level"] == logging.INFO
-        assert len(config_args["handlers"]) == 1
-        assert isinstance(config_args["handlers"][0], logging.StreamHandler)
-
-        # Verify httpx logger level
-        httpx_logger = logging.getLogger("httpx")
-        assert httpx_logger.level == logging.WARNING
+    # Verify httpx logger level
+    httpx_logger = logging.getLogger("httpx")
+    assert httpx_logger.level == logging.WARNING
 
 
 @pytest.mark.usefixtures("prod_settings")
@@ -125,19 +125,16 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
     with (
         patch("src.utils.RotatingFileHandler") as mock_file_handler,
         patch("src.utils.SMTPHandler") as mock_smtp_handler,
-        patch("logging.basicConfig") as mock_basic_config,
     ):
         # Configure mocks to return MagicMock instances
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)
         mock_smtp_handler.return_value = MagicMock(spec=SMTPHandler)
 
-        _ = get_logger()
+        logger = get_logger()
 
-        # Verify basicConfig was called correctly
-        mock_basic_config.assert_called_once()
-        config_args = mock_basic_config.call_args[1]
-        assert config_args["level"] == logging.ERROR
-        assert len(config_args["handlers"]) == 3
+        # Verify logger configuration
+        assert logger.level == logging.ERROR
+        assert len(logger.handlers) == 3
 
         # Verify handlers were created with correct configuration
         mock_file_handler.assert_called_once()
@@ -193,42 +190,21 @@ async def test_error_handler() -> None:
         mock_error.assert_called_once_with(mock_context.error)
 
 
-def test_ansi_colors_in_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test ANSI color codes are applied when in terminal."""
-    get_logger.cache_clear()
+def test_formatter_format() -> None:
+    """Test the format method of ColorFormatter."""
+    formatter = ColorFormatter()
+    record = logging.LogRecord(
+        name="test",
+        level=logging.ERROR,
+        pathname="test.py",
+        lineno=1,
+        msg="Test message",
+        args=(),
+        exc_info=None,
+    )
 
-    # Store original level names
-    original_warning = logging.getLevelName(logging.WARNING)
-    original_error = logging.getLevelName(logging.ERROR)
-
-    # Mock sys.stderr.isatty to return True
-    monkeypatch.setattr(sys.stderr, "isatty", lambda: True)
-
-    _ = get_logger()
-
-    # Verify that warning and error level names are modified
-    modified_warning = logging.getLevelName(logging.WARNING)
-    modified_error = logging.getLevelName(logging.ERROR)
-
-    assert modified_warning != original_warning
-    assert modified_error != original_error
-    assert ANSICodes.BOLD in modified_warning
-    assert ANSICodes.END in modified_warning
-
-
-def test_no_ansi_colors_outside_terminal(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Test ANSI color codes are not applied when not in terminal."""
-    get_logger.cache_clear()
-
-    # Store original level names
-    original_warning = logging.getLevelName(logging.WARNING)
-    original_error = logging.getLevelName(logging.ERROR)
-
-    # Mock sys.stderr.isatty to return False
-    monkeypatch.setattr(sys.stderr, "isatty", lambda: False)
-
-    _ = get_logger()
-
-    # Verify that warning and error level names remain unchanged
-    assert logging.getLevelName(logging.WARNING) == original_warning
-    assert logging.getLevelName(logging.ERROR) == original_error
+    formatted = formatter.format(record)
+    assert ColorFormatter.ESCAPE in formatted
+    assert ColorFormatter.RED in formatted
+    assert ColorFormatter.RESET in formatted
+    assert "Test message" in formatted
