@@ -122,7 +122,7 @@ def get_logger() -> logging.Logger:
     """
     logger = logging.getLogger(name="main")
     logger.setLevel(logging.INFO)  # Set base level for logger
-    stanard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
+    standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
 
     # Create console handler with color formatting
     console_handler = logging.StreamHandler()
@@ -148,7 +148,7 @@ def get_logger() -> logging.Logger:
             backupCount=FileHandlerConfig.BACKUP_COUNT,
             encoding="utf-8",
         )
-        file_handler.setFormatter(stanard_formatter)
+        file_handler.setFormatter(standard_formatter)
 
         # Create email handler with standard formatting
         email_handler = SMTPHandler(
@@ -159,7 +159,7 @@ def get_logger() -> logging.Logger:
             credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
             secure=(),
         )
-        email_handler.setFormatter(stanard_formatter)
+        email_handler.setFormatter(standard_formatter)
 
         handlers.extend((file_handler, email_handler))
 
