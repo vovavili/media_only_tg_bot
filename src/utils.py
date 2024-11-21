@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import logging
-import sys
-from enum import IntEnum, StrEnum
+from enum import IntEnum
 from collections.abc import Callable
 from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
@@ -32,14 +31,6 @@ class FileHandlerConfig(IntEnum):
 
     MAX_BYTES = 10 * 1024**2
     BACKUP_COUNT = 5
-
-
-class ANSICodes(StrEnum):
-    """ANSI escape codes for terminal text formatting."""
-
-    BOLD = "\033[1;"
-    END = "m"
-    ALL = "0"
 
 
 class Settings(BaseSettings):
@@ -77,6 +68,39 @@ class Settings(BaseSettings):
     )
 
 
+class ColorFormatter(logging.Formatter):
+    """Formatter adding colors to console output."""
+
+    GREY = "38"
+    YELLOW: Final = "33"
+    RED: Final = "31"
+    BOLD: Final = ";1"
+    ESCAPE: Final = "\x1b["
+    RESET: Final = "0m"
+    INTENSITY: Final = ";20m"
+
+    BASE_FORMAT: Final = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    @classmethod
+    def get_formats(cls) -> dict[int, str]:
+        """Get a dictionary of formats with proper ANSI codes for each logging level."""
+        return {
+            level: cls.ESCAPE + color + cls.INTENSITY + cls.BASE_FORMAT + cls.ESCAPE + cls.RESET
+            for level, color in (
+                (logging.DEBUG, cls.GREY),
+                (logging.INFO, cls.GREY),
+                (logging.WARNING, cls.YELLOW),
+                (logging.ERROR, cls.RED),
+                (logging.CRITICAL, cls.RED + cls.BOLD),
+            )
+        }
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_fmt = self.get_formats().get(record.levelno, self.BASE_FORMAT)
+        formatter = logging.Formatter(log_fmt)
+        return formatter.format(record)
+
+
 @cache
 def get_settings() -> Settings:
     """
@@ -94,22 +118,26 @@ def get_logger() -> logging.Logger:
     Returns:
         logging.Logger: The logger for the script.
     """
+    logger = logging.getLogger(name="main")
+    logger.setLevel(logging.INFO)  # Set base level for logger
+
+    # Create console handler with color formatting
     console_handler = logging.StreamHandler()
+    console_handler.setFormatter(ColorFormatter())
     handlers: list[logging.Handler] = [console_handler]
 
     settings = get_settings()
 
-    # In development, set higher logging level for httpx to avoid all GET and POST requests
-    # being logged.
+    # In development, set higher logging level for httpx
     if settings.ENVIRONMENT == "development":
-        level = logging.INFO
+        logger.setLevel(logging.INFO)
         logging.getLogger(name="httpx").setLevel(logging.WARNING)
     elif settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
         raise ValueError("All email environment variables are required in production.")
-    # In production, disable logging information, note errors in a rotating file log, and
-    # e-mail myself in case of an error.
     else:
-        level = logging.ERROR
+        logger.setLevel(logging.ERROR)
+
+        # Create file handler with standard formatting
         file_handler = RotatingFileHandler(
             filename=ROOT_DIR / "export_log.log",
             mode="a",
@@ -117,42 +145,27 @@ def get_logger() -> logging.Logger:
             backupCount=FileHandlerConfig.BACKUP_COUNT,
             encoding="utf-8",
         )
+        file_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
+
+        # Create email handler with standard formatting
         email_handler = SMTPHandler(
             mailhost=(settings.SMTP_HOST, SMTP_PORT),
             fromaddr=settings.SMTP_USER,
             toaddrs=settings.SMTP_USER,
             subject="Application Error",
             credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
-            # This enables TLS - https://docs.python.org/3/library/logging.handlers.html#smtphandler
             secure=(),
         )
+        email_handler.setFormatter(logging.Formatter(ColorFormatter.BASE_FORMAT))
+
         handlers.extend((file_handler, email_handler))
 
-    # Adds color for terminal output only - https://stackoverflow.com/a/7995762/11010254
-    if sys.stderr.isatty():
-        for level in (logging.WARNING, logging.ERROR):
-            logging.addLevelName(
-                level,
-                "".join(
-                    (
-                        ANSICodes.BOLD,
-                        str(level + 1),
-                        ANSICodes.END,
-                        logging.getLevelName(level),
-                        ANSICodes.BOLD,
-                        ANSICodes.ALL,
-                        ANSICodes.END,
-                    )
-                ),
-            )
+    # Remove any existing handlers and add new ones
+    logger.handlers.clear()
+    for handler in handlers:
+        logger.addHandler(handler)
 
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        handlers=handlers,
-    )
-
-    return logging.getLogger(name="main")
+    return logger
 
 
 def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
