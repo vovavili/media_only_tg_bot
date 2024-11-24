@@ -126,10 +126,10 @@ class DuplicateFilter(logging.Filter):
         """
         # Get the formatted message instead of the raw format string
         current_log = (record.module, record.levelno, record.getMessage())
-        if current_log != self.last_log:
-            self.last_log = current_log
-            return True
-        return False
+        if current_log == self.last_log:
+            return False
+        self.last_log = current_log
+        return True
 
 
 @cache
