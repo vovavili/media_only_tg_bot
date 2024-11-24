@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from unittest.mock import MagicMock, patch
 from typing import Final, Generator, Never
@@ -11,6 +12,7 @@ import pytest
 
 from src.utils import (
     ColorFormatter,
+    DuplicateFilter,
     FileHandlerConfig,
     Settings,
     get_logger,
@@ -208,3 +210,117 @@ def test_formatter_format() -> None:
     assert ColorFormatter.RED in formatted
     assert ColorFormatter.RESET in formatted
     assert "Test message" in formatted
+
+
+@pytest.fixture(name="duplicate_filter")
+def fixture_duplicate_filter() -> DuplicateFilter:
+    """Provide a fresh DuplicateFilter instance for each test."""
+    return DuplicateFilter()
+
+
+def create_log_record(
+    module: str = "test_module",
+    level: int = 20,  # INFO level
+    msg: str = "Test message",
+    args: tuple[str | Mapping[str, str], ...] = (),
+) -> logging.LogRecord:
+    """Helper function to create LogRecord instances for testing.
+
+    Args:
+        module: The module name for the log record
+        level: The logging level (default: INFO/20)
+        msg: The message to log
+        args: Tuple of arguments for message formatting (default: empty tuple)
+
+    Returns:
+        LogRecord: A configured log record for testing
+    """
+    return logging.LogRecord(
+        name=module, level=level, pathname="test.py", lineno=1, msg=msg, args=args, exc_info=None
+    )
+
+
+def test_duplicate_filter_initialization(duplicate_filter: DuplicateFilter) -> None:
+    """Test that DuplicateFilter initializes with expected state."""
+    assert duplicate_filter.last_log is None
+
+
+def test_filter_allows_first_message(duplicate_filter: DuplicateFilter) -> None:
+    """Test that the first message always passes through the filter."""
+    record = create_log_record()
+    assert duplicate_filter.filter(record) is True
+    assert duplicate_filter.last_log == (record.module, record.levelno, record.getMessage())
+
+
+def test_filter_blocks_duplicate_message(duplicate_filter: DuplicateFilter) -> None:
+    """Test that duplicate messages are blocked."""
+    record1 = create_log_record()
+    record2 = create_log_record()  # Same parameters as record1
+
+    duplicate_filter.filter(record1)  # First message
+    assert duplicate_filter.filter(record2) is False  # Second identical message
+
+
+def test_filter_allows_different_message(duplicate_filter: DuplicateFilter) -> None:
+    """Test that different messages are allowed through."""
+    record1 = create_log_record(msg="First message")
+    record2 = create_log_record(msg="Second message")
+
+    duplicate_filter.filter(record1)  # First message
+    assert duplicate_filter.filter(record2) is True  # Different message
+
+
+def test_filter_allows_same_message_different_level(duplicate_filter: DuplicateFilter) -> None:
+    """Test that same message with different level is allowed through."""
+    record1 = create_log_record(level=20)  # INFO
+    record2 = create_log_record(level=40)  # ERROR
+
+    duplicate_filter.filter(record1)
+    assert duplicate_filter.filter(record2) is True
+
+
+def test_filter_allows_same_message_different_module(duplicate_filter: DuplicateFilter) -> None:
+    """Test that same message from different module is not allowed through."""
+    record1 = create_log_record(module="module1")
+    record2 = create_log_record(module="module2")
+
+    duplicate_filter.filter(record1)
+    assert duplicate_filter.filter(record2) is False
+
+
+def test_filter_with_formatted_messages() -> None:
+    """Test that filter works correctly with formatted messages."""
+    duplicate_filter = DuplicateFilter()
+
+    # Create records with format strings
+    record1 = create_log_record(msg="User %s logged in", args=("Alice",))
+    record2 = create_log_record(msg="User %s logged in", args=("Bob",))
+
+    assert duplicate_filter.filter(record1) is True
+    # Different formatted result, should be allowed
+    assert duplicate_filter.filter(record2) is True
+
+
+def test_filter_integration_with_logger(duplicate_filter: DuplicateFilter) -> None:
+    """Test DuplicateFilter works when integrated with a logger."""
+    logger = logging.getLogger("test_logger")
+    logger.setLevel(logging.INFO)
+
+    # Create a mock handler with a proper level attribute
+    mock_handler = MagicMock(spec=logging.Handler)
+    mock_handler.level = logging.INFO  # Set the handler level
+    logger.addHandler(mock_handler)
+    logger.addFilter(duplicate_filter)
+
+    # Log some messages
+    logger.info("Test message")  # Should be logged
+    logger.info("Test message")  # Should be filtered out (duplicate)
+    logger.info("Different message")  # Should be logged
+
+    # Check that only non-duplicate messages were handled
+    assert mock_handler.handle.call_count == 2
+
+    # Verify the content of the messages that got through
+    calls = mock_handler.handle.call_args_list
+    assert calls[0][0][0].getMessage() == "Test message"
+    assert calls[1][0][0].getMessage() == "Different message"

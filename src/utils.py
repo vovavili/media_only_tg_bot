@@ -85,7 +85,9 @@ class ColorFormatter(logging.Formatter):
     def get_formats(cls) -> dict[int, str]:
         """Get a dictionary of formats with proper ANSI codes for each logging level."""
         return {
-            level: cls.ESCAPE + color + cls.INTENSITY + cls.BASE_FORMAT + cls.ESCAPE + cls.RESET
+            level: "".join(
+                (cls.ESCAPE, color, cls.INTENSITY, cls.BASE_FORMAT, cls.ESCAPE, cls.RESET)
+            )
             for level, color in (
                 (logging.DEBUG, cls.GREY),
                 (logging.INFO, cls.GREY),
@@ -101,6 +103,33 @@ class ColorFormatter(logging.Formatter):
         log_fmt = self.get_formats().get(record.levelno, self.BASE_FORMAT)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+
+# pylint: disable=too-few-public-methods
+class DuplicateFilter(logging.Filter):
+    """A logging filter that prevents duplicate log messages from being output. Useful for
+    something like htmx errors, which tend to repeat frequently."""
+
+    def __init__(self) -> None:
+        self.last_log: tuple[str, int, str] | None = None
+        super().__init__()
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        """Filter log records by checking for duplicates.
+
+        Args:
+            record: The log record to be evaluated.
+
+        Returns:
+            bool: True if the message should be logged (is not a duplicate),
+                 False if the message should be filtered out (is a duplicate).
+        """
+        # Get the formatted message instead of the raw format string
+        current_log = (record.module, record.levelno, record.getMessage())
+        if current_log != self.last_log:
+            self.last_log = current_log
+            return True
+        return False
 
 
 @cache
@@ -121,8 +150,7 @@ def get_logger() -> logging.Logger:
         logging.Logger: The logger for the script.
     """
     logger = logging.getLogger(name="main")
-    logger.setLevel(logging.INFO)  # Set base level for logger
-    standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
+    logger.addFilter(DuplicateFilter())
 
     # Create console handler with color formatting
     console_handler = logging.StreamHandler()
@@ -139,6 +167,7 @@ def get_logger() -> logging.Logger:
         raise ValueError("All email environment variables are required in production.")
     else:
         logger.setLevel(logging.ERROR)
+        standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
 
         # Create file handler with standard formatting
         file_handler = RotatingFileHandler(
@@ -157,7 +186,7 @@ def get_logger() -> logging.Logger:
             toaddrs=settings.SMTP_USER,
             subject="Application Error",
             credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
-            secure=(),
+            secure=(),  # This enables TLS
         )
         email_handler.setFormatter(standard_formatter)
 
