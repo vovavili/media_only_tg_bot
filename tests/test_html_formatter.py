@@ -12,8 +12,7 @@ from logging.handlers import RotatingFileHandler
 from unittest.mock import MagicMock, patch
 from string import Template
 from pathlib import Path
-from types import TracebackType
-from typing import Type
+from typing import Type, TYPE_CHECKING
 
 import pytest
 
@@ -26,6 +25,9 @@ from src.utils import (
     get_logger,
 )
 from tests.conftest import create_log_record
+
+if TYPE_CHECKING:
+    from types import TracebackType
 
 
 @pytest.fixture(name="html_email_handler")
