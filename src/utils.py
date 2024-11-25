@@ -8,7 +8,6 @@ import logging
 from enum import IntEnum
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from collections.abc import Callable
 from string import Template
 from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
@@ -19,6 +18,7 @@ from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from telegram.ext import ContextTypes
 
 SMTP_PORT: Final = 587
