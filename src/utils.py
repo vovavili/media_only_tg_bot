@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from string import Template
 from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from functools import wraps, cache
+from functools import cache, partial, wraps
 from typing import Final, Literal, TYPE_CHECKING
 
 from pydantic import EmailStr, SecretStr
@@ -235,6 +235,7 @@ def get_logger() -> logging.Logger:
     """
     logger = logging.getLogger(name="main")
     logger.addFilter(DuplicateFilter())
+    logger.error = partial(logger.error, exc_info=True)  # type: ignore[method-assign]
 
     # Create console handler with color formatting
     console_handler = logging.StreamHandler()
