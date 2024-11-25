@@ -19,6 +19,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
     from telegram.ext import ContextTypes
 
 SMTP_PORT: Final = 587
