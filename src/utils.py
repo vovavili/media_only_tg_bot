@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import smtplib
 import logging
 from enum import IntEnum
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from collections.abc import Callable
+from string import Template
 from pathlib import Path
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from functools import wraps, cache
@@ -132,6 +137,84 @@ class DuplicateFilter(logging.Filter):
         return True
 
 
+class HTMLEmailHandler(SMTPHandler):
+    """Custom email handler that sends HTML-formatted emails."""
+
+    GREEN_HEX: Final = "#28a745"
+    RED_HEX: Final = "#dc3545"
+    DARK_RED_HEX: Final = "#dc3545"
+    YELLOW_HEX: Final = "#ffc107"
+
+    HEX_COLORS: Final = {
+        "ERROR": RED_HEX,
+        "CRITICAL": DARK_RED_HEX,
+        "WARNING": YELLOW_HEX,
+    }
+
+    EMAIL_TEMPLATE_PATH: Final = ROOT_DIR / "templates" / "error_email.html"
+
+    @classmethod
+    def load_template(cls) -> Template:
+        """Load the HTML template from file."""
+        if not cls.EMAIL_TEMPLATE_PATH.exists():
+            raise FileNotFoundError(f"Email template not found at {cls.EMAIL_TEMPLATE_PATH}")
+        return Template(cls.EMAIL_TEMPLATE_PATH.read_text(encoding="utf-8"))
+
+    def getSubject(self, record: logging.LogRecord) -> str:
+        """Customize the subject line to include the error level."""
+        return f"Application {record.levelname} - {dt.datetime.now():%Y-%m-%d %H:%M:%S}"
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """Format the email in HTML and send it. A slight adaptation of SMTPHandler's own
+        'emit' method."""
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = self.getSubject(record)
+            msg["From"] = self.fromaddr
+            msg["To"] = ", ".join(self.toaddrs)
+
+            # Prepare template variables
+            exception_text: str | None = None
+            if record.exc_info and self.formatter:  # Add check for self.formatter
+                exception_text = self.formatter.formatException(record.exc_info)
+
+            template_vars = {
+                "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "level": record.levelname,
+                "level_lower": record.levelname.lower(),
+                "level_color": self.HEX_COLORS.get(record.levelname, self.GREEN_HEX),
+                "logger_name": record.name,
+                "file_location": f"{record.pathname}:{record.lineno}",
+                "message": record.getMessage(),
+                "exception_info": (
+                    f"<p><strong>Exception:</strong></p><pre>{exception_text}</pre>"
+                    if exception_text is not None
+                    else ""
+                ),
+            }
+
+            # Load and render template
+            template = self.load_template()
+            html = template.substitute(template_vars)
+
+            part = MIMEText(html, "html")
+            msg.attach(part)
+
+            port: int | None = self.mailport
+            if port is None:
+                port = smtplib.SMTP_PORT
+
+            # Send email
+            with smtplib.SMTP(self.mailhost, port) as smtp:
+                smtp.starttls()
+                if self.username:
+                    smtp.login(self.username, self.password)
+                smtp.send_message(msg)
+        # pylint: disable=broad-except
+        except Exception:
+            self.handleError(record)
+
+
 @cache
 def get_settings() -> Settings:
     """
@@ -180,7 +263,7 @@ def get_logger() -> logging.Logger:
         file_handler.setFormatter(standard_formatter)
 
         # Create email handler with standard formatting
-        email_handler = SMTPHandler(
+        email_handler = HTMLEmailHandler(
             mailhost=(settings.SMTP_HOST, SMTP_PORT),
             fromaddr=settings.SMTP_USER,
             toaddrs=settings.SMTP_USER,

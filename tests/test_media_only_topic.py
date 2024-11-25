@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -13,6 +14,31 @@ from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages, mai
 from src.utils import Settings
 
 
+@pytest.fixture(name="mock_logger", autouse=True)
+def setup_mock_logger(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Ensure logger is properly mocked for each test."""
+    logger_mock = Mock()
+    monkeypatch.setattr("src.media_only_topic.get_logger", lambda: logger_mock)
+    return logger_mock
+
+
+@pytest.fixture(autouse=True)
+def isolate_logger() -> Generator[None, None, None]:
+    """Isolate logger configuration for these tests."""
+    logger = logging.getLogger("main")
+    # Store original handlers and level
+    original_handlers = logger.handlers.copy()
+    original_level = logger.level
+    # Clear all handlers
+    logger.handlers.clear()
+
+    yield
+
+    # Restore original state
+    logger.handlers = original_handlers
+    logger.level = original_level
+
+
 @pytest.fixture(name="logger")
 def fixture_logger() -> Generator[Mock, None, None]:
     """Mock logger for all tests and prevent file creation."""
@@ -22,8 +48,21 @@ def fixture_logger() -> Generator[Mock, None, None]:
         yield mock_logger
 
 
+def test_logger_fixture(logger: Mock) -> None:
+    """Test that logger fixture is properly configured."""
+    assert isinstance(logger, Mock)
+    # Verify that the logger has the expected methods
+    assert hasattr(logger, "info")
+    assert hasattr(logger, "error")
+    assert hasattr(logger, "warning")
+
+
 @pytest.mark.asyncio
-async def test_message_deletion_logging(message: Mock, context: Mock, logger: Mock) -> None:
+async def test_message_deletion_logging(
+    message: Mock,
+    context: Mock,
+    mock_logger: Mock,
+) -> None:
     """Test that message deletion is properly logged."""
     message.delete = AsyncMock()
     update = Update(update_id=1, message=message)
@@ -31,7 +70,7 @@ async def test_message_deletion_logging(message: Mock, context: Mock, logger: Mo
     await only_media_messages(update, context)
 
     message.delete.assert_called_once()
-    logger.info.assert_called_once_with(
+    mock_logger.info.assert_called_once_with(
         "Deleted message %s from user %s",
         message.message_id,
         message.from_user.username,
@@ -105,8 +144,8 @@ async def test_production_environment(
 
 @pytest.mark.asyncio
 async def test_invalid_update_object(context: Mock) -> None:
-    """Test that an invalid update object raises ValueError."""
-    with pytest.raises(ValueError, match="Invalid update object passed to the handle."):
+    """Test that an invalid update object raises TypeError."""
+    with pytest.raises(TypeError, match="Invalid update object passed to the handle."):
         await only_media_messages("not_an_update", context)
 
 

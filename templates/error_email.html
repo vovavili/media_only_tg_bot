@@ -1,0 +1,48 @@
+<!-- templates/error_email.html -->
+<html>
+  <head>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        color: #333;
+      }
+      .header {
+        background-color: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+      .error-details {
+        background-color: #fff;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .timestamp {
+        color: #666;
+        font-size: 0.9em;
+      }
+      .level-${level_lower} {
+        color: ${level_color};
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h2>Application Log</h2>
+      <p class="timestamp">Timestamp: ${timestamp}</p>
+    </div>
+    <div class="error-details">
+      <p><strong>Level:</strong>
+        <span class="level-${level_lower}">${level}</span>
+      </p>
+      <p><strong>Logger:</strong> ${logger_name}</p>
+      <p><strong>Location:</strong> ${file_location}</p>
+      <p><strong>Message:</strong></p>
+      <pre>${message}</pre>
+      ${exception_info}
+    </div>
+  </body>
+</html>

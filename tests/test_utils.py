@@ -1,9 +1,8 @@
-"""Unit tests for the utilities module."""
+"""Unit tests for the 'utils' module."""
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from unittest.mock import MagicMock, patch
 from typing import Final, Generator, Never
@@ -16,28 +15,12 @@ from src.utils import (
     FileHandlerConfig,
     Settings,
     get_logger,
-    get_settings,
     log_error,
     error_handler,
 )
-from tests.conftest import TEST_ENV_VARS
+from tests.conftest import create_log_record
 
 TEST_ERROR_MESSAGE: Final = "Test error message"
-
-
-@pytest.fixture(name="email_settings")
-def fixture_email_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
-    """Set up production environment settings with email configuration."""
-    test_env_vars = TEST_ENV_VARS | {
-        "SMTP_HOST": "smtp.test.com",
-        "SMTP_USER": "test@example.com",
-        "SMTP_PASSWORD": "test_password",
-    }
-    for key, value in test_env_vars.items():
-        monkeypatch.setenv(key, value)
-
-    get_settings.cache_clear()
-    return get_settings()
 
 
 @pytest.fixture(autouse=True)
@@ -126,11 +109,11 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
 
     with (
         patch("src.utils.RotatingFileHandler") as mock_file_handler,
-        patch("src.utils.SMTPHandler") as mock_smtp_handler,
+        patch("src.utils.HTMLEmailHandler") as mock_html_handler,
     ):
         # Configure mocks to return MagicMock instances
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)
-        mock_smtp_handler.return_value = MagicMock(spec=SMTPHandler)
+        mock_html_handler.return_value = MagicMock(spec=SMTPHandler)
 
         logger = get_logger()
 
@@ -144,8 +127,8 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
         assert file_handler_args["maxBytes"] == FileHandlerConfig.MAX_BYTES
         assert file_handler_args["backupCount"] == FileHandlerConfig.BACKUP_COUNT
 
-        mock_smtp_handler.assert_called_once()
-        smtp_handler_args = mock_smtp_handler.call_args[1]
+        mock_html_handler.assert_called_once()
+        smtp_handler_args = mock_html_handler.call_args[1]
         assert smtp_handler_args["mailhost"] == (email_settings.SMTP_HOST, 587)
         assert smtp_handler_args["fromaddr"] == email_settings.SMTP_USER
         assert smtp_handler_args["toaddrs"] == email_settings.SMTP_USER
@@ -195,15 +178,7 @@ async def test_error_handler() -> None:
 def test_formatter_format() -> None:
     """Test the format method of ColorFormatter."""
     formatter = ColorFormatter()
-    record = logging.LogRecord(
-        name="test",
-        level=logging.ERROR,
-        pathname="test.py",
-        lineno=1,
-        msg="Test message",
-        args=(),
-        exc_info=None,
-    )
+    record = create_log_record(level=logging.ERROR)
 
     formatted = formatter.format(record)
     assert ColorFormatter.ESCAPE in formatted
@@ -216,28 +191,6 @@ def test_formatter_format() -> None:
 def fixture_duplicate_filter() -> DuplicateFilter:
     """Provide a fresh DuplicateFilter instance for each test."""
     return DuplicateFilter()
-
-
-def create_log_record(
-    module: str = "test_module",
-    level: int = 20,  # INFO level
-    msg: str = "Test message",
-    args: tuple[str | Mapping[str, str], ...] = (),
-) -> logging.LogRecord:
-    """Helper function to create LogRecord instances for testing.
-
-    Args:
-        module: The module name for the log record
-        level: The logging level (default: INFO/20)
-        msg: The message to log
-        args: Tuple of arguments for message formatting (default: empty tuple)
-
-    Returns:
-        LogRecord: A configured log record for testing
-    """
-    return logging.LogRecord(
-        name=module, level=level, pathname="test.py", lineno=1, msg=msg, args=args, exc_info=None
-    )
 
 
 def test_duplicate_filter_initialization(duplicate_filter: DuplicateFilter) -> None:
