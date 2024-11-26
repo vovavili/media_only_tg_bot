@@ -233,7 +233,7 @@ class HTMLEmailHandler(SMTPHandler):
                     smtp.login(self.username, self.password)
                 smtp.send_message(msg)
         # pylint: disable=broad-except
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.handleError(record)
 
 
