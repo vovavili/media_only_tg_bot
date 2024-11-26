@@ -46,3 +46,22 @@ ignore = ["D203", "D213"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "module"
+
+[tool.pylint]
+max-line-length = 100
+persistent = true
+good-names = ["P"]
+
+[tool.coverage.run]
+omit = [
+    "*/__main__.py",
+    "*/__init__.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:"
+]

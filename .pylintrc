@@ -1,8 +1,0 @@
-[FORMAT]
-max-line-length=100
-
-[MASTER]
-persistent=yes
-
-[media_only_topic.utils]
-good-names=P
