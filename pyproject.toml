@@ -47,13 +47,15 @@ select = [
     "D",  # pydocstring, all conventions
     "LOG",  # flake8-logging
     "G",  # flake8-logging-format
+    "S",  # flake8-bandit
     "UP",  # pyupgrade
     "FA102",  # adds a future type hint annotation
 ]
 # These rules conflict with some other rules
 ignore = ["D203", "D213"]
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["D104"]
+"__init__.py" = ["D104"]  # __init__.py files can be empty
+"tests/*.py" = ["S101"]  # asserts allowed in tests...
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
