@@ -11,7 +11,8 @@ from email.mime.text import MIMEText
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from string import Template
-from typing import TYPE_CHECKING, Type
+from types import TracebackType
+from typing import Type
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,8 +27,7 @@ from src.utils import (
 )
 from tests.conftest import create_log_record
 
-if TYPE_CHECKING:
-    from types import TracebackType
+type ExcType = tuple[Type[BaseException], BaseException, TracebackType] | tuple[None, None, None]
 
 
 @pytest.fixture(name="html_email_handler")
@@ -149,11 +149,7 @@ def test_email_emission(html_email_handler: HTMLEmailHandler) -> None:
 def test_email_with_exception(html_email_handler: HTMLEmailHandler) -> None:
     """Test email formatting with exception information."""
     # Otherwise, pylint and mypy get confused
-    exc_info: tuple[Type[BaseException], BaseException, TracebackType] | tuple[None, None, None] = (
-        None,
-        None,
-        None,
-    )
+    exc_info: ExcType = (None, None, None)
     try:
         raise ValueError("Test exception")
     except ValueError:
@@ -633,6 +629,7 @@ def test_none_type_exception_handling(html_email_handler: HTMLEmailHandler) -> N
 def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -> None:
     """Test handling of both real and None exceptions."""
     # Create two records: one with a real exception and one with None
+    exc_info: ExcType = (None, None, None)
     try:
         raise ValueError("Test exception")
     except ValueError:
