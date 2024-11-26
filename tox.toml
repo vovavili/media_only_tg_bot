@@ -1,0 +1,42 @@
+requires = ["tox>=4.23.2", "tox-uv>=1.16.0"]
+min_version = "4.23.2"
+env_list = ["py312", "lint", "type", "fix"]
+
+[env_run_base]
+runner = "uv-venv-lock-runner"
+allowlist_externals = ["pytest", "ruff", "mypy", "pre-commit"]
+
+[env.py312]
+description = "run unit tests"
+deps = [
+    "pytest>=8.3.3",
+    "pytest-cov>=6.0.0"
+]
+commands = [["pytest", "{posargs:tests}", "--cov", "--cov-report=xml"]]
+
+[env.lint]
+description = "run linters"
+skip_install = true
+deps = ["ruff>=0.7.4"]
+commands = [
+    ["ruff", "check", "{posargs:.}"],
+    ["ruff", "format", "--check", "{posargs:.}"]
+]
+
+[env.type]
+description = "run type checks"
+runner = "uv-venv-lock-runner"
+deps = ["mypy>=1.13.0"]
+commands = [["mypy", "{posargs:src tests}"]]
+
+[env.fix]
+description = "run code formatter and linter (auto-fix)"
+skip_install = true
+deps = ["pre-commit-uv>=4.1.1"]
+commands = [["pre-commit", "run", "--all-files", "--show-diff-on-failure"]]
+
+[env.dev]
+description = "dev environment"
+runner = "uv-venv-lock-runner"
+extras = ["dev", "test", "type"]
+commands = [["uv", "pip", "tree"]]
