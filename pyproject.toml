@@ -92,3 +92,35 @@ runner = "uv-venv-lock-runner"
 description = "dev environment"
 extras = ["dev", "test", "type"]
 commands = ["uv pip tree"]
+
+[tool.tox.env.default]
+runner = "uv-venv-lock-runner"
+description = "run unit tests"
+deps = [
+    "pytest>=8.3.3",
+    "pytest-cov>=6.0.0",
+]
+allowlist_externals = ["pytest"]
+commands = [
+    "pytest {posargs:tests} --cov=src --cov-report=xml"
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "pass",
+    "raise ImportError",
+]
+ignore_errors = true
+omit = [
+    "tests/*",
+    "setup.py",
+]

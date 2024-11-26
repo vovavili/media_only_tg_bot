@@ -32,11 +32,29 @@ jobs:
           uv pip install --system tox tox-uv
 
       - name: Run tests with tox-uv
-        run: tox -e py312 --result-json .tox/coverage.json
+        run: tox -e py312
+
+      - name: Debug directory structure
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "Tox directory contents:"
+          ls -la .tox || echo "No .tox directory"
+          echo "Searching for coverage.xml:"
+          find . -name coverage.xml
 
       - name: Move coverage file
         run: |
-          cp .tox/py312/coverage.xml ./coverage.xml || echo "No coverage file found"
+          if [ -f ".tox/py312/coverage.xml" ]; then
+            cp .tox/py312/coverage.xml ./coverage.xml
+          elif [ -f ".coverage" ]; then
+            python -m coverage xml
+          else
+            echo "No coverage file found"
+            exit 1
+          fi
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -44,3 +62,4 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
           fail_ci_if_error: true
+          verbose: true
