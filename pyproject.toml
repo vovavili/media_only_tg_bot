@@ -42,7 +42,7 @@ select = [
     "E",  # pycodestyle, errors
     "I",  # isort
     "D",  # pydocstyle, all conventions
-    "BLE",  #flake8-blind-except
+    "BLE",  # flake8-blind-except
     "B",  # flake8-bugbear
     "LOG",  # flake8-logging
     "G",  # flake8-logging-format
@@ -55,7 +55,7 @@ select = [
     "FURB",  # refurb
     "PERF",  # perflint
     "RUF",  # ruff-specific rules
-    "FA102",  # adds a future type hint annotation
+    "FA102",  # Add "from __future__ import annotations" to every file
 ]
 # These rules conflict with some other rules
 ignore = ["D203", "D213"]
