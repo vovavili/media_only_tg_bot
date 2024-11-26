@@ -93,13 +93,6 @@ description = "dev environment"
 extras = ["dev", "test", "type"]
 commands = ["uv pip tree"]
 
-[tool.tox.env.default]
-runner = "uv-venv-lock-runner"
-description = "run unit tests"
-deps = [
-    "pytest>=8.3.3",
-    "pytest-cov>=6.0.0",
-]
 allowlist_externals = ["pytest"]
 commands = [
     "pytest {posargs:tests} --cov=src --cov-report=xml"
