@@ -315,12 +315,10 @@ def get_logger() -> logging.Logger:
         # Ignore KeyboardInterrupt so a console Python program can exit with Ctrl + C.
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
-            return
-
-        logger.critical(
-            "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
-        )
-        return
+        else:
+            logger.critical(
+                "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
+            )
 
     sys.excepthook = handle_exception
 
