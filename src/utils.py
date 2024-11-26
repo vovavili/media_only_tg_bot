@@ -312,7 +312,7 @@ def get_logger() -> logging.Logger:
 
         With this, you will be able to log exceptions without an explicit try/except block.
         """
-        # Ignore KeyboardInterrupt so a console python program can exit with Ctrl + C.
+        # Ignore KeyboardInterrupt so a console Python program can exit with Ctrl + C.
         if issubclass(exc_type, KeyboardInterrupt):
             sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
