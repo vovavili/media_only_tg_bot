@@ -32,11 +32,9 @@ type ExcType = tuple[type[BaseException], BaseException, TracebackType] | tuple[
 @pytest.fixture(name="html_email_handler")
 def fixture_html_email_handler(email_settings: Settings) -> HTMLEmailHandler:
     """Provide a configured HTMLEmailHandler instance."""
-    assert (
-        email_settings.SMTP_HOST is not None
-        and email_settings.SMTP_USER is not None
-        and email_settings.SMTP_PASSWORD is not None
-    )
+    assert email_settings.SMTP_HOST is not None
+    assert email_settings.SMTP_USER is not None
+    assert email_settings.SMTP_PASSWORD is not None
     return HTMLEmailHandler(
         mailhost=(email_settings.SMTP_HOST, 587),
         fromaddr=email_settings.SMTP_USER,
@@ -201,11 +199,9 @@ def test_email_handler_error_handling(html_email_handler: HTMLEmailHandler) -> N
 
 def test_email_handler_default_port(email_settings: Settings) -> None:
     """Test that email handler uses default SMTP port when 'mailport' is None."""
-    assert (
-        email_settings.SMTP_HOST is not None
-        and email_settings.SMTP_USER is not None
-        and email_settings.SMTP_PASSWORD is not None
-    )
+    assert email_settings.SMTP_HOST is not None
+    assert email_settings.SMTP_USER is not None
+    assert email_settings.SMTP_PASSWORD is not None
     # Create handler without specifying port
     handler = HTMLEmailHandler(
         mailhost=email_settings.SMTP_HOST,  # Note: not passing as tuple
@@ -241,7 +237,7 @@ def test_email_handler_default_port(email_settings: Settings) -> None:
 
 
 @pytest.mark.parametrize(
-    "level_name,expected_color",
+    ("level_name", "expected_color"),
     [
         ("ERROR", HTMLEmailHandler.RED_HEX),
         ("CRITICAL", HTMLEmailHandler.DARK_RED_HEX),
@@ -283,11 +279,9 @@ def test_integration_with_logger(
     email_settings: Settings,
 ) -> None:
     """Test HTMLEmailHandler integration with logger."""
-    assert (
-        email_settings.SMTP_HOST is not None
-        and email_settings.SMTP_USER is not None
-        and email_settings.SMTP_PASSWORD is not None
-    )
+    assert email_settings.SMTP_HOST is not None
+    assert email_settings.SMTP_USER is not None
+    assert email_settings.SMTP_PASSWORD is not None
     logger = logging.getLogger("test_html_logger")
     logger.setLevel(logging.ERROR)
 

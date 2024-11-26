@@ -48,7 +48,11 @@ select = [
     "LOG",  # flake8-logging
     "G",  # flake8-logging-format
     "S",  # flake8-bandit
+    "PT",  # flake8-pytest-style
+    "SIM",  # flake8-simplify
+    "PTH",  # flake8-use-pathlib
     "UP",  # pyupgrade
+    "FURB",  # refurb
     "FA102",  # adds a future type hint annotation
 ]
 # These rules conflict with some other rules

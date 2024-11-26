@@ -150,7 +150,8 @@ def test_exception_hook() -> None:
             raise ValueError(TEST_ERROR_MESSAGE)
         except ValueError:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            assert exc_type is not None and exc_value is not None
+            assert exc_type is not None
+            assert exc_value is not None
             sys.excepthook(exc_type, exc_value, exc_traceback)
 
         mock_critical.assert_called_once()
@@ -172,7 +173,8 @@ def test_keyboard_interrupt_handling() -> None:
             raise KeyboardInterrupt()
         except KeyboardInterrupt:
             exc_type, exc_value, exc_traceback = sys.exc_info()
-            assert exc_type is not None and exc_value is not None
+            assert exc_type is not None
+            assert exc_value is not None
             sys.excepthook(exc_type, exc_value, exc_traceback)
 
         # Verify that critical wasn't called but original excepthook was

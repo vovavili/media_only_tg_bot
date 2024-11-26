@@ -13,6 +13,8 @@ from telegram.ext import ContextTypes
 from src.media_only_topic import ALLOWED_MESSAGE_TYPES, main, only_media_messages
 from src.utils import Settings
 
+type MockGenerator = Generator[Mock, None, None]
+
 
 @pytest.fixture(name="mock_logger", autouse=True)
 def setup_mock_logger(monkeypatch: pytest.MonkeyPatch) -> Mock:
@@ -40,12 +42,19 @@ def isolate_logger() -> Generator[None, None, None]:
 
 
 @pytest.fixture(name="logger")
-def fixture_logger() -> Generator[Mock, None, None]:
+def fixture_logger() -> MockGenerator:
     """Mock logger for all tests and prevent file creation."""
     with patch("logging.getLogger") as mock_get_logger:
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
         yield mock_logger
+
+
+@pytest.fixture(name="message_handler")
+def fixture_message_handler() -> MockGenerator:
+    """Get a mock message handler for tests."""
+    with patch("src.media_only_topic.MessageHandler") as mock:
+        yield mock
 
 
 def test_logger_fixture(logger: Mock) -> None:
@@ -203,7 +212,7 @@ async def test_message_without_user(message: Mock, context: Mock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "media_type", ("video", "animation", "document", "video_note", "story", "sticker")
+    "media_type", ["video", "animation", "document", "video_note", "story", "sticker"]
 )
 async def test_allowed_media_types(message: Mock, context: Mock, media_type: str) -> None:
     """Test that all allowed media types are not deleted."""
@@ -215,14 +224,13 @@ async def test_allowed_media_types(message: Mock, context: Mock, media_type: str
     message.delete.assert_not_called()
 
 
+@pytest.mark.usefixtures("message_handler")
 @patch("src.media_only_topic.Application")
-@patch("src.media_only_topic.MessageHandler")
 @patch("src.media_only_topic.get_settings")
 @patch("src.media_only_topic.get_logger")
 def test_main(
     mock_get_logger: Mock,
     mock_get_settings: Mock,
-    _: Mock,
     mock_application: Mock,
 ) -> None:
     """Test the main function."""
