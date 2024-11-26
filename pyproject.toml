@@ -40,7 +40,9 @@ max-doc-length = 100
 select = [
     "I",  # isort
     "D",  # pydocstring, all conventions
+    "LOG",  # flake8-logging
     "G",  # flake8-logging-format
+    "FA102",  # adds a future type hint annotation
 ]
 # These rules conflict with some other rules
 ignore = ["D203", "D213"]
