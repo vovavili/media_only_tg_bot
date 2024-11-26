@@ -91,10 +91,10 @@ commands = ["pre-commit run --all-files --show-diff-on-failure"]
 runner = "uv-venv-lock-runner"
 description = "dev environment"
 extras = ["dev", "test", "type"]
-commands = ["uv pip tree"]
 
 allowlist_externals = ["pytest"]
 commands = [
+    "uv pip tree",
     "pytest {posargs:tests} --cov=src --cov-report=xml"
 ]
 
