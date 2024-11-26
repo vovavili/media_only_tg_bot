@@ -137,7 +137,8 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
         assert smtp_handler_args["subject"] == "Application Error"
 
 
-def test_exception_hook(email_settings: Settings) -> None:
+@pytest.mark.usefixtures("email_settings")
+def test_exception_hook() -> None:
     """Test the custom exception hook logs uncaught exceptions."""
     get_logger.cache_clear()
     logger = get_logger()
@@ -155,7 +156,8 @@ def test_exception_hook(email_settings: Settings) -> None:
         assert "Encountered an uncaught exception" in mock_critical.call_args[0][0]
 
 
-def test_keyboard_interrupt_handling(email_settings: Settings) -> None:
+@pytest.mark.usefixtures("email_settings")
+def test_keyboard_interrupt_handling() -> None:
     """Test that KeyboardInterrupt is handled specially."""
     get_logger.cache_clear()
     logger = get_logger()
