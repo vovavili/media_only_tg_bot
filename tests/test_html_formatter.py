@@ -12,7 +12,6 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from string import Template
 from types import TracebackType
-from typing import Type
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,7 +26,7 @@ from src.utils import (
 )
 from tests.conftest import create_log_record
 
-type ExcType = tuple[Type[BaseException], BaseException, TracebackType] | tuple[None, None, None]
+type ExcType = tuple[type[BaseException], BaseException, TracebackType] | tuple[None, None, None]
 
 
 @pytest.fixture(name="html_email_handler")

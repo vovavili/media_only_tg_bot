@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import logging
 import sys
+from collections.abc import Generator
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from typing import Final, Generator
+from typing import Final
 from unittest.mock import MagicMock, patch
 
 import pytest
