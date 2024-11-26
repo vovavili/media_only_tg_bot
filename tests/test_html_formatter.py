@@ -594,3 +594,87 @@ def test_html_email_handler_with_color_formatter() -> None:
     formatted_message = formatter.format(emitted_record)
     assert ColorFormatter.RED in formatted_message
     assert test_message in formatted_message
+
+
+def test_none_type_exception_handling(html_email_handler: HTMLEmailHandler) -> None:
+    """Test that 'NoneType: None' exceptions are properly filtered out."""
+    # Create a record with a None exception
+    record = logging.LogRecord(
+        name="test",
+        level=logging.ERROR,
+        pathname="test.py",
+        lineno=1,
+        msg="Test message with None exception",
+        args=(),
+        exc_info=(None, None, None),
+    )
+
+    with patch("smtplib.SMTP") as mock_smtp:
+        mock_smtp_instance = MagicMock()
+        mock_smtp.return_value.__enter__.return_value = mock_smtp_instance
+
+        html_email_handler.setFormatter(logging.Formatter())
+        html_email_handler.emit(record)
+
+        # Get the sent message
+        sent_message = mock_smtp_instance.send_message.call_args[0][0]
+        message_str = str(sent_message)
+
+        # Verify that the exception section is not included
+        assert "Exception:" not in message_str
+        assert "NoneType: None" not in message_str
+
+        # Verify that other parts of the message are still included
+        assert "Test message with None exception" in message_str
+        assert record.name in message_str
+        assert record.levelname in message_str
+
+
+def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -> None:
+    """Test handling of both real and None exceptions."""
+    # Create two records: one with a real exception and one with None
+    try:
+        raise ValueError("Test exception")
+    except ValueError:
+        exc_info = sys.exc_info()
+
+    real_exception_record = logging.LogRecord(
+        name="test",
+        level=logging.ERROR,
+        pathname="test.py",
+        lineno=1,
+        msg="Test message with real exception",
+        args=(),
+        exc_info=exc_info,
+    )
+
+    none_exception_record = logging.LogRecord(
+        name="test",
+        level=logging.ERROR,
+        pathname="test.py",
+        lineno=1,
+        msg="Test message with None exception",
+        args=(),
+        exc_info=(None, None, None),
+    )
+
+    with patch("smtplib.SMTP") as mock_smtp:
+        mock_smtp_instance = MagicMock()
+        mock_smtp.return_value.__enter__.return_value = mock_smtp_instance
+
+        html_email_handler.setFormatter(logging.Formatter())
+
+        # Test real exception
+        html_email_handler.emit(real_exception_record)
+        real_message = str(mock_smtp_instance.send_message.call_args[0][0])
+        assert "Exception:" in real_message
+        assert "ValueError: Test exception" in real_message
+
+        # Reset mock
+        mock_smtp_instance.reset_mock()
+
+        # Test None exception
+        html_email_handler.emit(none_exception_record)
+        none_message = str(mock_smtp_instance.send_message.call_args[0][0])
+        assert "Exception:" not in none_message
+        assert "NoneType: None" not in none_message

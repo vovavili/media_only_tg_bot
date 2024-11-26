@@ -191,6 +191,9 @@ class HTMLEmailHandler(SMTPHandler):
             exception_text: str | None = None
             if record.exc_info and self.formatter:  # Add check for self.formatter
                 exception_text = self.formatter.formatException(record.exc_info)
+                # Add this check to filter out "NoneType: None" exceptions (e.g. for htmx logs).
+                if exception_text == "NoneType: None":
+                    exception_text = None
 
             template_vars = {
                 "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
