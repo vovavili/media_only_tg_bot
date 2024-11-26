@@ -310,7 +310,7 @@ def get_logger() -> logging.Logger:
     ) -> Any:
         """Log all uncaught exceptions using a pre-configured logger.
 
-        With this, you will be able to log exceptions without an explicit try/except block.
+        When passed to sys.excepthook, you have no need for an explicit try/except block.
         """
         # Ignore KeyboardInterrupt so a console Python program can exit with Ctrl + C.
         if issubclass(exc_type, KeyboardInterrupt):
@@ -322,7 +322,6 @@ def get_logger() -> logging.Logger:
         )
         return
 
-    # Now, you don't need explicit try/except blocks to log exceptions.
     sys.excepthook = handle_exception
 
     return logger
