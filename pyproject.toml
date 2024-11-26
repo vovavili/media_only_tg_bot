@@ -41,7 +41,7 @@ select = [
     "F",  # pyflakes
     "E",  # pycodestyle, errors
     "I",  # isort
-    "D",  # pydocstring, all conventions
+    "D",  # pydocstyle, all conventions
     "LOG",  # flake8-logging
     "G",  # flake8-logging-format
     "S",  # flake8-bandit
