@@ -6,9 +6,9 @@ from __future__ import annotations
 from typing import Final
 
 from telegram import Update
-from telegram.ext import Application, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-from src.utils import get_logger, log_error, get_settings, error_handler
+from src.utils import error_handler, get_logger, get_settings, log_error
 
 ALLOWED_MESSAGE_TYPES: Final = (
     "photo",

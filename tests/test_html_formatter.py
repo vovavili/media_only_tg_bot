@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-import sys
-import smtplib
 import datetime as dt
 import logging
+import smtplib
+import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from logging.handlers import RotatingFileHandler
-from unittest.mock import MagicMock, patch
-from string import Template
 from pathlib import Path
-from typing import Type, TYPE_CHECKING
+from string import Template
+from typing import TYPE_CHECKING, Type
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.utils import (
     SMTP_PORT,
-    DuplicateFilter,
     ColorFormatter,
+    DuplicateFilter,
     HTMLEmailHandler,
     Settings,
     get_logger,

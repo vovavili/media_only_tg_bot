@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from unittest.mock import MagicMock, patch
 from typing import Final, Generator, Never
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,9 +14,9 @@ from src.utils import (
     DuplicateFilter,
     FileHandlerConfig,
     Settings,
+    error_handler,
     get_logger,
     log_error,
-    error_handler,
 )
 from tests.conftest import create_log_record
 

@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 import datetime as dt
-import smtplib
 import logging
-from enum import IntEnum
+import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from string import Template
-from pathlib import Path
-from logging.handlers import RotatingFileHandler, SMTPHandler
+from enum import IntEnum
 from functools import cache, partial, wraps
-from typing import Final, Literal, TYPE_CHECKING
+from logging.handlers import RotatingFileHandler, SMTPHandler
+from pathlib import Path
+from string import Template
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict

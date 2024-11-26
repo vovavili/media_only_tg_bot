@@ -8,7 +8,7 @@ from typing import Final
 
 import pytest
 
-from src.utils import Settings, get_settings, get_logger
+from src.utils import Settings, get_logger, get_settings
 
 TEST_ENV_VARS: Final = {
     "BOT_TOKEN": "live_token_xyz",

@@ -10,7 +10,7 @@ import pytest
 from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
-from src.media_only_topic import ALLOWED_MESSAGE_TYPES, only_media_messages, main
+from src.media_only_topic import ALLOWED_MESSAGE_TYPES, main, only_media_messages
 from src.utils import Settings
 
 
