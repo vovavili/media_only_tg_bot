@@ -65,3 +65,59 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:"
 ]
+
+[tool.tox]
+min_version = "4.23.2"
+env_list = ["py312", "lint", "type", "fix"]
+requires = ["tox-uv>=1.16.0"]
+isolated_build = true
+
+[tool.tox.env_run_base]
+runner = "uv-venv-lock-runner"
+
+[tool.tox.env.py312]
+description = "run unit tests"
+deps = [
+    "pytest>=8.3.3",
+    "pytest-cov>=6.0.0",
+]
+allowlist_externals = ["pytest"]
+commands = [
+    ["pytest", "{posargs:tests}", "--cov", "--cov-report=xml"]
+]
+
+[tool.tox.env.lint]
+description = "run linters"
+skip_install = true
+deps = ["ruff>=0.7.4"]
+allowlist_externals = ["ruff"]
+commands = [
+    ["ruff", "check", "{posargs:.}"],
+    ["ruff", "format", "--check", "{posargs:.}"]
+]
+
+[tool.tox.env.type]
+description = "run type checks"
+runner = "uv-venv-lock-runner"
+deps = ["mypy>=1.13.0"]
+allowlist_externals = ["mypy"]
+commands = [
+    ["mypy", "{posargs:src}", "tests"]
+]
+
+[tool.tox.env.fix]
+description = "run code formatter and linter (auto-fix)"
+skip_install = true
+deps = ["pre-commit-uv>=4.1.1"]
+allowlist_externals = ["pre-commit"]
+commands = [
+    ["pre-commit", "run", "--all-files", "--show-diff-on-failure"]
+]
+
+[tool.tox.env.dev]
+description = "dev environment"
+runner = "uv-venv-lock-runner"
+extras = ["dev", "test", "type"]
+commands = [
+    ["uv", "pip", "tree"]
+]
