@@ -9,7 +9,7 @@ import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import IntEnum
-from functools import cache, partial
+from functools import cache, cached_property, partial
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from pathlib import Path
 from string import Template
@@ -172,9 +172,14 @@ class HTMLEmailHandler(SMTPHandler):
             raise FileNotFoundError(f"Email template not found at {cls.EMAIL_TEMPLATE_PATH}")
         return Template(cls.EMAIL_TEMPLATE_PATH.read_text(encoding="utf-8"))
 
+    @cached_property
+    def error_time(self) -> str:
+        """Specify the same error time for both the subject line and the timestamp."""
+        return dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     def getSubject(self, record: logging.LogRecord) -> str:
         """Customize the subject line to include the error level."""
-        return f"Application {record.levelname} - {dt.datetime.now():%Y-%m-%d %H:%M:%S}"
+        return f"Application {record.levelname} - {self.error_time}"
 
     def emit(self, record: logging.LogRecord) -> None:
         """Format the email in HTML and send it.
@@ -196,7 +201,7 @@ class HTMLEmailHandler(SMTPHandler):
                     exception_text = None
 
             template_vars = {
-                "timestamp": dt.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "timestamp": self.error_time,
                 "level": record.levelname,
                 "level_lower": record.levelname.lower(),
                 "level_color": self.HEX_COLORS.get(record.levelname, self.GREEN_HEX),
