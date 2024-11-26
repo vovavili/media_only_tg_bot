@@ -27,12 +27,13 @@ ROOT_DIR: Final = Path(__file__).resolve().parents[1]
 
 
 class FileHandlerConfig(IntEnum):
-    """
-    Constants for logging file handler in production.
+    """Constants for logging file handler in production.
 
-    Attributes:
+    Attributes
+    ----------
         MAX_BYTES: Maximum size of each log file in bytes (defaults to 10MB)
         BACKUP_COUNT: Number of backup files to keep (defaults to 5)
+
     """
 
     MAX_BYTES = 10 * 1024**2
@@ -40,7 +41,8 @@ class FileHandlerConfig(IntEnum):
 
 
 class Settings(BaseSettings):
-    """
+    """Statically typed validator for your .env or .env.prod file.
+
     Please make sure your .env contains the following variables:
     - BOT_TOKEN - an API token for your bot.
     - TOPIC_ID - an ID for your group chat topic.
@@ -104,8 +106,10 @@ class ColorFormatter(logging.Formatter):
         }
 
     def format(self, record: logging.LogRecord) -> str:
-        """Overwrite the parent 'format' method to format the specified record as text with
-        appropriate color coding."""
+        """Format the specified record as text with appropriate color coding.
+
+        This overwrites the parent 'format' method.
+        """
         log_fmt = self.get_formats().get(record.levelno, self.BASE_FORMAT)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
@@ -113,10 +117,13 @@ class ColorFormatter(logging.Formatter):
 
 # pylint: disable=too-few-public-methods
 class DuplicateFilter(logging.Filter):
-    """A logging filter that prevents duplicate log messages from being output. Useful for
-    something like htmx errors, which tend to repeat frequently."""
+    """A logging filter that prevents duplicate log messages from being output.
+
+    This is useful for something like htmx errors, which tend to repeat frequently.
+    """
 
     def __init__(self) -> None:
+        """Initialize a logging filter while keeping track of the last log."""
         self.last_log: tuple[str, int, str] | None = None
         super().__init__()
 
@@ -124,11 +131,14 @@ class DuplicateFilter(logging.Filter):
         """Filter log records by checking for duplicates.
 
         Args:
+        ----
             record: The log record to be evaluated.
 
         Returns:
+        -------
             bool: True if the message should be logged (is not a duplicate),
                  False if the message should be filtered out (is a duplicate).
+
         """
         # Get the formatted message instead of the raw format string
         current_log = (record.module, record.levelno, record.getMessage())
@@ -166,8 +176,10 @@ class HTMLEmailHandler(SMTPHandler):
         return f"Application {record.levelname} - {dt.datetime.now():%Y-%m-%d %H:%M:%S}"
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Format the email in HTML and send it. A slight adaptation of SMTPHandler's own
-        'emit' method."""
+        """Format the email in HTML and send it.
+
+        This is a slight adaptation of SMTPHandler's own 'emit' method.
+        """
         try:
             msg = MIMEMultipart("alternative")
             msg["Subject"] = self.getSubject(record)
@@ -218,8 +230,9 @@ class HTMLEmailHandler(SMTPHandler):
 
 @cache
 def get_settings() -> Settings:
-    """
-    Avoid issues with unit testing by lazy evaluation.
+    """Avoid issues with unit testing by lazy evaluation.
+
+    More information here:
     https://fastapi.tiangolo.com/advanced/settings/#creating-the-settings-only-once-with-lru_cache
     """
     return Settings()
@@ -227,11 +240,12 @@ def get_settings() -> Settings:
 
 @cache
 def get_logger() -> logging.Logger:
-    """
-    Initialize the logging system with rotation capability.
+    """Initialize the logging system with rotation capability.
 
-    Returns:
+    Returns
+    -------
         logging.Logger: The logger for the script.
+
     """
     logger = logging.getLogger(name="main")
     logger.addFilter(DuplicateFilter())
@@ -286,7 +300,7 @@ def get_logger() -> logging.Logger:
 
 
 def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
-    """A decorator to log an error in a function, in case it occurs."""
+    """Use a decorator to log an error if it occurs in a function."""
 
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:

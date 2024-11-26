@@ -24,16 +24,19 @@ def create_log_record(
     msg: str = "Test message",
     args: tuple[str | Mapping[str, str], ...] = (),
 ) -> logging.LogRecord:
-    """Helper function to create LogRecord instances for testing.
+    """Create LogRecord instances for testing using a helper function.
 
     Args:
+    ----
         module: The module name for the log record
         level: The logging level (default: INFO/20)
         msg: The message to log
         args: Tuple of arguments for message formatting (default: empty tuple)
 
     Returns:
+    -------
         LogRecord: A configured log record for testing
+
     """
     return logging.LogRecord(
         name=module, level=level, pathname="test.py", lineno=1, msg=msg, args=args, exc_info=None
