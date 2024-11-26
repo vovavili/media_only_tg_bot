@@ -5,20 +5,21 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import smtplib
+import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import IntEnum
-from functools import cache, partial, wraps
+from functools import cache, partial
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from pathlib import Path
 from string import Template
-from typing import TYPE_CHECKING, Final, Literal
+from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from types import TracebackType
 
     from telegram.ext import ContextTypes
 
@@ -240,7 +241,14 @@ def get_settings() -> Settings:
 
 @cache
 def get_logger() -> logging.Logger:
-    """Initialize the logging system with rotation capability.
+    """Initialize the logging system.
+
+    The logging system will have the following traits:
+        - Color formatting in terminals
+        - No info/debug messages in production
+        - Rotating file handler, for production
+        - Email notification with HTML formatting, for production
+        - An ability to log exceptions without explicit try/except blocks
 
     Returns
     -------
@@ -249,6 +257,7 @@ def get_logger() -> logging.Logger:
     """
     logger = logging.getLogger(name="main")
     logger.addFilter(DuplicateFilter())
+    # I need to be able to see error exception info, this is especially useful for htmx logs.
     logger.error = partial(logger.error, exc_info=True)  # type: ignore[method-assign]
 
     # Create console handler with color formatting
@@ -296,21 +305,27 @@ def get_logger() -> logging.Logger:
     for handler in handlers:
         logger.addHandler(handler)
 
+    def handle_exception(
+        exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None
+    ) -> Any:
+        """Log all uncaught exceptions using a pre-configured logger.
+
+        With this, you will be able to log exceptions without an explicit try/except block.
+        """
+        # Ignore KeyboardInterrupt so a console python program can exit with Ctrl + C.
+        if issubclass(exc_type, KeyboardInterrupt):
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+            return
+
+        logger.critical(
+            "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
+        )
+        return
+
+    # Now, you don't need explicit try/except blocks to log exceptions.
+    sys.excepthook = handle_exception
+
     return logger
-
-
-def log_error[**P, R](func: Callable[P, R]) -> Callable[P, R]:
-    """Use a decorator to log an error if it occurs in a function."""
-
-    @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        try:
-            return func(*args, **kwargs)
-        except Exception as err:
-            get_logger().error(err)
-            raise err
-
-    return wrapper
 
 
 async def error_handler(_: object, /, context: ContextTypes.DEFAULT_TYPE) -> None:

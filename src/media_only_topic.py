@@ -8,7 +8,7 @@ from typing import Final
 from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-from src.utils import error_handler, get_logger, get_settings, log_error
+from src.utils import error_handler, get_logger, get_settings
 
 ALLOWED_MESSAGE_TYPES: Final = (
     "photo",
@@ -46,7 +46,6 @@ async def only_media_messages(update: object, _: ContextTypes.DEFAULT_TYPE) -> N
         )
 
 
-@log_error
 def main() -> None:
     """Run the bot for a media-only topic."""
     bot_token = get_settings().BOT_TOKEN.get_secret_value()

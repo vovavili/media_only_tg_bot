@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler, SMTPHandler
-from typing import Final, Generator, Never
+from typing import Final, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -16,7 +17,6 @@ from src.utils import (
     Settings,
     error_handler,
     get_logger,
-    log_error,
 )
 from tests.conftest import create_log_record
 
@@ -27,13 +27,15 @@ TEST_ERROR_MESSAGE: Final = "Test error message"
 def fixture_reset_logging() -> Generator[None, None, None]:
     """Reset logging configuration before each test."""
     logger = logging.getLogger("main")
-    # Store original handlers
+    # Store original handlers and excepthook
     original_handlers = logger.handlers.copy()
+    original_excepthook = sys.excepthook
     # Clear all handlers
     logger.handlers.clear()
     yield
     # Restore to original state
     logger.handlers = original_handlers
+    sys.excepthook = original_excepthook
 
 
 def test_filehandler_config() -> None:
@@ -135,28 +137,44 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
         assert smtp_handler_args["subject"] == "Application Error"
 
 
-def test_log_error_decorator() -> None:
-    """Test log_error decorator functionality."""
+def test_exception_hook(email_settings: Settings) -> None:
+    """Test the custom exception hook logs uncaught exceptions."""
     get_logger.cache_clear()
     logger = get_logger()
 
-    # Test successful function execution
-    @log_error
-    def success_func() -> str:
-        return "success"
+    with patch.object(logger, "critical") as mock_critical:
+        # Simulate an uncaught exception
+        try:
+            raise ValueError(TEST_ERROR_MESSAGE)
+        except ValueError:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            assert exc_type is not None and exc_value is not None
+            sys.excepthook(exc_type, exc_value, exc_traceback)
 
-    assert success_func() == "success"
+        mock_critical.assert_called_once()
+        assert "Encountered an uncaught exception" in mock_critical.call_args[0][0]
 
-    # Test error logging
-    @log_error
-    def error_func() -> Never:
-        raise ValueError(TEST_ERROR_MESSAGE)
+
+def test_keyboard_interrupt_handling(email_settings: Settings) -> None:
+    """Test that KeyboardInterrupt is handled specially."""
+    get_logger.cache_clear()
+    logger = get_logger()
 
     with (
-        patch.object(logger, "error"),
-        pytest.raises(ValueError, match=TEST_ERROR_MESSAGE),
+        patch.object(logger, "critical") as mock_critical,
+        patch("sys.__excepthook__") as mock_original_hook,
     ):
-        error_func()
+        # Simulate a KeyboardInterrupt
+        try:
+            raise KeyboardInterrupt()
+        except KeyboardInterrupt:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            assert exc_type is not None and exc_value is not None
+            sys.excepthook(exc_type, exc_value, exc_traceback)
+
+        # Verify that critical wasn't called but original excepthook was
+        mock_critical.assert_not_called()
+        mock_original_hook.assert_called_once()
 
 
 @pytest.mark.asyncio
