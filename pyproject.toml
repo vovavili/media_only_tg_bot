@@ -38,7 +38,7 @@ line-length = 100
 max-doc-length = 100
 [tool.ruff.lint]
 select = [
-    "F",  # flake8
+    "F",  # pyflakes
     # default pycodestyle rules
     "E4",
     "E7",
