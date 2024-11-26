@@ -29,10 +29,14 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system ".[test]"
-          uv pip install --system tox
+          uv pip install --system tox tox-uv
 
       - name: Run tests with tox-uv
-        run: tox -e py
+        run: tox -e py312 --result-json .tox/coverage.json
+
+      - name: Move coverage file
+        run: |
+          cp .tox/py312/coverage.xml ./coverage.xml || echo "No coverage file found"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

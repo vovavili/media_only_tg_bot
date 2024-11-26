@@ -61,7 +61,7 @@ deps = [
     "pytest-cov>=6.0.0",
 ]
 allowlist_externals = ["pytest"]
-commands = ["pytest {posargs:tests} --cov --cov-report=xml"]
+commands = ["pytest {posargs:tests} --cov --cov-report=xml:coverage.xml"]
 
 [tool.tox.env.lint]
 description = "run linters"
