@@ -47,7 +47,7 @@ Then, run the script:
 git clone https://github.com/vovavili/media_only_tg_bot.git
 cd media_only_tg_bot
 # Make sure to create a .env or .env.prod file at this step
-uv run -m src.media_only_topic
+uv run run_bot
 ```
 
 Prior to running the script, please make sure your `.env` or `.env.prod` file contains the following variables. To find out 
