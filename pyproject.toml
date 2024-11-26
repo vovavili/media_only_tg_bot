@@ -53,6 +53,7 @@ select = [
     "PTH",  # flake8-use-pathlib
     "UP",  # pyupgrade
     "FURB",  # refurb
+    "RUF",  # ruff-specific rules
     "FA102",  # adds a future type hint annotation
 ]
 # These rules conflict with some other rules
