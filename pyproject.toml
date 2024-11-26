@@ -55,7 +55,7 @@ select = [
 ignore = ["D203", "D213"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]  # __init__.py files can be empty
-"tests/*.py" = ["S101"]  # asserts allowed in tests...
+"tests/*.py" = ["S101"]  # asserts allowed in tests
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
