@@ -9,7 +9,7 @@ import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from enum import IntEnum
-from functools import cache, cached_property, partial
+from functools import cache, cached_property
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from pathlib import Path
 from string import Template
@@ -265,8 +265,6 @@ def get_logger() -> logging.Logger:
     """
     logger = logging.getLogger(name="main")
     logger.addFilter(DuplicateFilter())
-    # I need to be able to see error exception info, this is especially useful for htmx logs.
-    logger.error = partial(logger.error, exc_info=True)  # type: ignore[method-assign]
 
     # Create console handler with color formatting
     console_handler = logging.StreamHandler()
