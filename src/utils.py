@@ -318,13 +318,13 @@ def get_logger() -> logging.Logger:
 
         When passed to sys.excepthook, you have no need for an explicit try/except block.
         """
-        # Ignore KeyboardInterrupt so a console Python program can exit with Ctrl + C.
-        if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        else:
+        # Only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
+        if issubclass(exc_type, Exception):
             logger.critical(
                 "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
             )
+        else:
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
     sys.excepthook = handle_exception
 
