@@ -54,14 +54,23 @@ select = [
     "UP",  # pyupgrade
     "FURB",  # refurb
     "PERF",  # perflint
+    "TRY",  # tryceratops
     "RUF",  # ruff-specific rules
     "FA102",  # Add "from __future__ import annotations" to every file
 ]
-# These rules conflict with some other rules
-ignore = ["D203", "D213"]
+ignore = [
+    # These rules conflict with some other rules
+    "D203",
+    "D213",
+    # I do not think that long error messages are bad
+    "TRY003",
+]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]  # __init__.py files can be empty
-"tests/*.py" = ["S101"]  # asserts allowed in tests
+"tests/*.py" = [
+    "S101",  # asserts allowed in tests
+    "TRY301",  # it might be useful to get an abstract "raise" while testing
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
