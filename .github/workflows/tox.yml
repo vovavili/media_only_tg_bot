@@ -29,7 +29,14 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system ".[test]"
-          uv pip install --system tox
+          uv pip install --system tox tox-gh-actions
+
+      - name: Create test environment file
+        run: |
+          echo "ENVIRONMENT=development" > .env
+          echo "BOT_TOKEN=test_token" >> .env
+          echo "TOPIC_ID=123" >> .env
+          echo "GROUP_CHAT_ID=456" >> .env
 
       - name: Run tests with tox-uv
         run: tox -e py
