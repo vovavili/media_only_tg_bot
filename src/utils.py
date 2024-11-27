@@ -1,6 +1,7 @@
 """Create importable "settings" and "logger" instances.
 
-Creating a logger instance instead of having a cached function also enables ruff's logging rules.
+Creating a logger instance instead of having a cached function also enables ruff's logging rules:
+https://docs.astral.sh/ruff/rules/logging-exc-info/#known-problems
 """
 
 from __future__ import annotations
