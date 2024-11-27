@@ -70,6 +70,7 @@ ignore = [
     # It might be useful to get an abstract "raise" while testing, or to directly jump to "except"
     "TRY301",
 ]
+logger-objects = ["utils.logger"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["D104"]  # __init__.py files can be empty
 "tests/*.py" = ["S101"]  # pylint relies on asserts
