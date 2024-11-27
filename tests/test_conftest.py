@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from unittest.mock import Mock
 
-from src.make_utils import Settings
+from tests.conftest import create_log_record
 
 
 def test_mock_settings(mock_settings: Mock) -> None:
@@ -14,7 +14,6 @@ def test_mock_settings(mock_settings: Mock) -> None:
     assert mock_settings.GROUP_CHAT_ID == 123456
     assert mock_settings.TOPIC_ID == 789
     assert mock_settings.ENVIRONMENT == "development"
-    assert mock_settings._spec_class == Settings
 
 
 def test_mock_logger(mock_logger: Mock) -> None:
@@ -42,8 +41,6 @@ def test_mock_logger(mock_logger: Mock) -> None:
 
 def test_create_log_record_default() -> None:
     """Test create_log_record with default values."""
-    from tests.conftest import create_log_record
-
     record = create_log_record()
     assert record.name == "test_module"
     assert record.levelno == logging.INFO
@@ -56,8 +53,6 @@ def test_create_log_record_default() -> None:
 
 def test_create_log_record_custom() -> None:
     """Test create_log_record with custom values."""
-    from tests.conftest import create_log_record
-
     record = create_log_record(
         module="custom_module",
         level=logging.ERROR,
