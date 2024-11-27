@@ -38,25 +38,28 @@ line-length = 100
 max-doc-length = 100
 [tool.ruff.lint]
 select = [
-    "F",  # pyflakes
-    "E",  # pycodestyle, errors
-    "I",  # isort
-    "D",  # pydocstyle, all conventions
-    "BLE",  # flake8-blind-except
-    "B",  # flake8-bugbear
-    "LOG",  # flake8-logging
-    "G",  # flake8-logging-format
-    "S",  # flake8-bandit
-    "PT",  # flake8-pytest-style
-    "SIM",  # flake8-simplify
-    "PTH",  # flake8-use-pathlib
-    "ERA",  # eradicate
-    "UP",  # pyupgrade
-    "FURB",  # refurb
-    "PERF",  # perflint
-    "TRY",  # tryceratops
-    "RUF",  # ruff-specific rules
-    "FA102",  # Add "from __future__ import annotations" to every file
+    "F", # pyflakes
+    "E", # pycodestyle, errors
+    "I", # isort
+    "D", # pydocstyle, all conventions
+    "BLE", # flake8-blind-except
+    "B", # flake8-bugbear
+    "LOG", # flake8-logging
+    "G", # flake8-logging-format
+    "S", # flake8-bandit
+    "PT", # flake8-pytest-style
+    "SIM", # flake8-simplify
+    "PTH", # flake8-use-pathlib
+    "ERA", # eradicate
+    "UP", # pyupgrade
+    "FURB", # refurb
+    "PERF", # perflint
+    "TRY", # tryceratops
+    "RUF", # ruff-specific rules
+    "FA102", # Add "from __future__ import annotations" to every file
+    "PLC", # Pylint conventions
+    "PLE", # Pylint error
+    "PLW", # Pylint warnings
 ]
 ignore = [
     # These rules conflict with some other rules
