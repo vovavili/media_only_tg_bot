@@ -79,7 +79,7 @@ asyncio_default_fixture_loop_scope = "module"
 [tool.pylint]
 max-line-length = 100
 persistent = true
-good-names = ["P"]
+good-names = ["P"]  # This might be useful for generics
 
 [tool.coverage.run]
 omit = [
