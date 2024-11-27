@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import html
 import logging
 import smtplib
 import sys
@@ -205,11 +206,11 @@ class HTMLEmailHandler(SMTPHandler):
                 "level": record.levelname,
                 "level_lower": record.levelname.lower(),
                 "level_color": self.HEX_COLORS.get(record.levelname, self.GREEN_HEX),
-                "logger_name": record.name,
-                "file_location": f"{record.pathname}:{record.lineno}",
-                "message": record.getMessage(),
+                "logger_name": html.escape(record.name),
+                "file_location": html.escape(f"{record.pathname}:{record.lineno}"),
+                "message": html.escape(record.getMessage()),
                 "exception_info": (
-                    f"<p><strong>Exception:</strong></p><pre>{exception_text}</pre>"
+                    f"<p><strong>Exception:</strong></p><pre>{html.escape(exception_text)}</pre>"
                     if exception_text is not None
                     else ""
                 ),
@@ -217,9 +218,9 @@ class HTMLEmailHandler(SMTPHandler):
 
             # Load and render template
             template = self.load_template()
-            html = template.substitute(template_vars)
+            html_message = template.substitute(template_vars)
 
-            part = MIMEText(html, "html")
+            part = MIMEText(html_message, "html")
             msg.attach(part)
 
             port: int | None = self.mailport
