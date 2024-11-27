@@ -10,44 +10,35 @@ import pytest
 from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
+from src.make_utils import Settings
 from src.media_only_topic import ALLOWED_MESSAGE_TYPES, main, only_media_messages
-from src.utils import Settings
 
 type MockGenerator = Generator[Mock, None, None]
 
 
 @pytest.fixture(name="mock_logger", autouse=True)
-def setup_mock_logger(monkeypatch: pytest.MonkeyPatch) -> Mock:
-    """Ensure logger is properly mocked for each test."""
-    logger_mock = Mock()
-    monkeypatch.setattr("src.media_only_topic.get_logger", lambda: logger_mock)
-    return logger_mock
+def fixture_mock_logger(monkeypatch: pytest.MonkeyPatch) -> Mock:
+    """Return the mocked logger."""
+    mock_logger = Mock()
+    monkeypatch.setattr("src.media_only_topic.logger", mock_logger)
+    return mock_logger
 
 
 @pytest.fixture(autouse=True)
 def isolate_logger() -> Generator[None, None, None]:
     """Isolate logger configuration for these tests."""
-    logger = logging.getLogger("main")
+    logger_instance = logging.getLogger("main")
     # Store original handlers and level
-    original_handlers = logger.handlers.copy()
-    original_level = logger.level
+    original_handlers = logger_instance.handlers.copy()
+    original_level = logger_instance.level
     # Clear all handlers
-    logger.handlers.clear()
+    logger_instance.handlers.clear()
 
     yield
 
     # Restore original state
-    logger.handlers = original_handlers
-    logger.level = original_level
-
-
-@pytest.fixture(name="logger")
-def fixture_logger() -> MockGenerator:
-    """Mock logger for all tests and prevent file creation."""
-    with patch("logging.getLogger") as mock_get_logger:
-        mock_logger = Mock()
-        mock_get_logger.return_value = mock_logger
-        yield mock_logger
+    logger_instance.handlers = original_handlers
+    logger_instance.level = original_level
 
 
 @pytest.fixture(name="message_handler")
@@ -57,13 +48,13 @@ def fixture_message_handler() -> MockGenerator:
         yield mock
 
 
-def test_logger_fixture(logger: Mock) -> None:
-    """Test that logger fixture is properly configured."""
-    assert isinstance(logger, Mock)
-    # Verify that the logger has the expected methods
-    assert hasattr(logger, "info")
-    assert hasattr(logger, "error")
-    assert hasattr(logger, "warning")
+@pytest.fixture(name="settings")
+def fixture_settings() -> Mock:
+    """Create a mock settings object."""
+    settings = Mock()
+    settings.GROUP_CHAT_ID = 123456
+    settings.TOPIC_ID = 789
+    return settings
 
 
 @pytest.mark.asyncio
@@ -87,7 +78,7 @@ async def test_message_deletion_logging(
 
 
 @pytest.fixture(name="message")
-def fixture_message(settings: Settings) -> Mock:
+def fixture_message(settings: Mock) -> Mock:
     """Create a mock message with the appropriate attributes."""
     message = Mock(spec=Message)
     message.chat = Mock(spec=Chat)
@@ -137,7 +128,7 @@ async def test_photo_message_kept(message: Mock, context: Mock) -> None:
 
 @pytest.mark.asyncio
 async def test_production_environment(
-    message: Mock, context: Mock, prod_settings: Settings
+    message: Mock, context: Mock, prod_settings: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test that production environment works correctly."""
     message.chat.id = prod_settings.GROUP_CHAT_ID
@@ -146,6 +137,8 @@ async def test_production_environment(
 
     update = Update(update_id=1, message=message)
 
+    # Mock the settings in the module being tested
+    monkeypatch.setattr("src.media_only_topic.settings", prod_settings)
     await only_media_messages(update, context)
 
     message.delete.assert_called_once()
@@ -226,24 +219,19 @@ async def test_allowed_media_types(message: Mock, context: Mock, media_type: str
 
 @pytest.mark.usefixtures("message_handler")
 @patch("src.media_only_topic.Application")
-@patch("src.media_only_topic.get_settings")
-@patch("src.media_only_topic.get_logger")
-def test_main(
-    mock_get_logger: Mock,
-    mock_get_settings: Mock,
-    mock_application: Mock,
-) -> None:
+def test_main(mock_application: Mock, mock_logger: Mock, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test the main function."""
     # Setup mocks
-    mock_logger = Mock()
-    mock_get_logger.return_value = mock_logger
-
-    mock_settings = Mock()
-    mock_settings.BOT_TOKEN.get_secret_value.return_value = "test_token"
-    mock_get_settings.return_value = mock_settings
-
     mock_app = Mock()
     mock_application.builder.return_value.token.return_value.build.return_value = mock_app
+
+    # Create a mock settings with BOT_TOKEN
+    mock_settings = Mock()
+    mock_settings.BOT_TOKEN = Mock()
+    mock_settings.BOT_TOKEN.get_secret_value.return_value = "test_token"
+
+    # Mock the settings in the module
+    monkeypatch.setattr("src.media_only_topic.settings", mock_settings)
 
     # Run main
     main()
