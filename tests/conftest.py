@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
-from collections.abc import Generator, Mapping
+from collections.abc import Mapping
 from typing import Final
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -44,33 +43,6 @@ def create_log_record(
     return logging.LogRecord(
         name=module, level=level, pathname="test.py", lineno=1, msg=msg, args=args, exc_info=None
     )
-
-
-@pytest.fixture(scope="session", autouse=True)
-def mock_env_and_settings() -> Generator[None, None, None]:
-    """Set up environment variables and mock settings for all tests."""
-    test_env_vars = {
-        "BOT_TOKEN": "test_token_xyz",
-        "TOPIC_ID": "42",
-        "GROUP_CHAT_ID": "123456",
-        "ENVIRONMENT": "development",
-    }
-
-    # Set environment variables
-    for key, value in test_env_vars.items():
-        os.environ[key] = value
-
-    # Mock get_settings before any imports happen
-    with patch("src.make_utils.get_settings") as mock_get_settings:
-        mock_settings = Mock(spec=Settings)
-        mock_settings.GROUP_CHAT_ID = 123456
-        mock_settings.TOPIC_ID = 789
-        mock_settings.ENVIRONMENT = "development"
-        mock_token = Mock()
-        mock_token.get_secret_value.return_value = test_env_vars["BOT_TOKEN"]
-        mock_settings.BOT_TOKEN = mock_token
-        mock_get_settings.return_value = mock_settings
-        yield
 
 
 @pytest.fixture(autouse=True)
