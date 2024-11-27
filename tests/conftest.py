@@ -92,7 +92,7 @@ def fixture_mock_settings() -> Mock:
 
 
 @pytest.fixture(name="prod_settings")
-def fixture_prod_settings(monkeypatch: pytest.MonkeyPatch) -> Mock:
+def fixture_prod_settings() -> Mock:
     """Set up production environment settings."""
     settings = Mock(spec=Settings)
     settings.GROUP_CHAT_ID = int(TEST_ENV_VARS["GROUP_CHAT_ID"])
@@ -112,7 +112,7 @@ def fixture_prod_settings(monkeypatch: pytest.MonkeyPatch) -> Mock:
 
 
 @pytest.fixture(name="email_settings")
-def fixture_email_settings(monkeypatch: pytest.MonkeyPatch) -> Mock:
+def fixture_email_settings() -> Mock:
     """Set up production environment settings with email configuration."""
     settings = Mock(spec=Settings)
     test_env_vars = TEST_ENV_VARS | {

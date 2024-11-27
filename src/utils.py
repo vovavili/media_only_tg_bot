@@ -1,4 +1,7 @@
-"""Create importable "settings" and "logger" instances."""
+"""Create importable "settings" and "logger" instances.
+
+Creating a logger instance instead of having a cached function also enables ruff's logging rules.
+"""
 
 from __future__ import annotations
 
