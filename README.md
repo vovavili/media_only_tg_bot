@@ -22,8 +22,6 @@ Install uv (and git) on Windows 11+ with PowerShell:
 ```powershell
 irm https://astral.sh/uv/install.ps1 | iex
 $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
-# git doesn't come with Windows 11 by default
-winget install -e --id Git.Git
 ```
 
 On macOS or Linux:
@@ -44,8 +42,7 @@ pip install --upgrade uv
 Then, run the script:
 
 ```shell
-git clone https://github.com/vovavili/media_only_tg_bot.git
-cd media_only_tg_bot
+curl -L https://github.com/vovavili/media_only_tg_bot/archive/refs/heads/master.zip | tar -xz && cd media_only_tg_bot-master
 # Make sure to create a .env or .env.prod file at this step
 uv run -m src.media_only_topic
 ```
