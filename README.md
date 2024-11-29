@@ -20,7 +20,7 @@ To run this script with the right Python version and all the dependencies, pleas
 Install uv (and git) on Windows 11+ with PowerShell:
 
 ```powershell
-irm https://astral.sh/uv/install.ps1 | iex && $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
+irm https://astral.sh/uv/install.ps1 | iex; $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
 ```
 
 On macOS or Linux:
@@ -40,7 +40,8 @@ pip install --upgrade uv
 Then, run the script:
 
 ```shell
-curl -L https://github.com/vovavili/media_only_tg_bot/archive/refs/heads/master.zip | tar -xz && cd media_only_tg_bot-master
+curl -L https://github.com/vovavili/media_only_tg_bot/archive/refs/heads/master.zip | tar -xz
+cd media_only_tg_bot-master
 # Make sure to create a .env or .env.prod file at this step
 uv run -m src.media_only_topic
 ```
