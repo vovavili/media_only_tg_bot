@@ -62,6 +62,5 @@ Required only in production, to send an email message on failure:
 - **SMTP_PASSWORD** - Email password or app-specific password (in case of something like 
 [Gmail](https://support.google.com/mail/answer/185833?hl=en)).
 
-Based on my experience, this script runs on [PythonAnywhere](https://www.pythonanywhere.com/)'s free tier just fine, 
-though for particularly active group chats it might be too limited. Keep in mind that, for the free tier, logging emails 
-are [restricted to Gmail only](https://help.pythonanywhere.com/pages/SMTPForFreeUsers/).
+Based on my experience, this script runs on Oracle's free VM.Standard.E2.1.Micro shape just fine, 
+though for particularly active group chats it might be too limited.
