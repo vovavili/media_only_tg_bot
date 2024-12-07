@@ -152,3 +152,8 @@ def fixture_mock_logger() -> Mock:
     logger.critical = Mock()
     logger.debug = Mock()
     return logger
+
+
+def test_function() -> None:
+    """A dummy function for unit testing decorators."""
+    return None

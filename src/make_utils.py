@@ -126,10 +126,10 @@ class DuplicateFilter(logging.Filter):
     This is useful for something like htmx errors, which tend to repeat frequently.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, name: str = "") -> None:
         """Initialize a logging filter while keeping track of the last log."""
         self.last_log: tuple[str, int, str] | None = None
-        super().__init__()
+        super().__init__(name=name)
 
     def filter(self, record: logging.LogRecord) -> bool:
         """Filter log records by checking for duplicates.
@@ -212,22 +212,22 @@ class HTMLEmailHandler(SMTPHandler):
                 "file_location": html.escape(f"{record.pathname}:{record.lineno}"),
                 "message": html.escape(record.getMessage()),
                 "exception_info": (
-                    f"<p><strong>Exception:</strong></p><pre>{html.escape(exception_text)}</pre>"
+                    f"""<div class="detail-row">
+                        <div class="detail-label">Exception</div>
+                        <pre>{html.escape(exception_text)}</pre>
+                    </div>"""
                     if exception_text is not None
                     else ""
                 ),
             }
 
-            # Load and render template
             template = self.load_template()
             html_message = template.substitute(template_vars)
 
             part = MIMEText(html_message, "html")
             msg.attach(part)
 
-            port: int | None = self.mailport
-            if port is None:
-                port = smtplib.SMTP_PORT
+            port = self.mailport or smtplib.SMTP_PORT
 
             # Send email
             with smtplib.SMTP(self.mailhost, port) as smtp:
@@ -250,17 +250,42 @@ def get_settings() -> Settings:
     return Settings()
 
 
-def get_logger() -> logging.Logger:
+def log_to_excepthook(use_logger: logging.Logger) -> None:
+    """Log all uncaught exceptions using a pre-configured logger.
+
+    When passed to sys.excepthook, you have no need for an explicit try/except block.
+    """
+
+    def handle_exception(
+        exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None
+    ) -> Any:
+        """Handle with the right signature that is passed to sys.excepthook."""
+        # Only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
+        if issubclass(exc_type, Exception):
+            use_logger.critical(
+                "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
+            )
+        else:
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
+
+    sys.excepthook = handle_exception
+
+
+def get_logger(pass_to_excepthook: bool = True) -> logging.Logger:
     """Initialize the logging system.
 
     The logging system will have the following traits:
         - Color formatting in terminals
         - No info/debug messages in production
         - Rotating file handler, for production
-        - Email notification with HTML formatting, for production
+        - For critical errors in production, email notification with HTML formatting
         - An ability to log exceptions without explicit try/except blocks
 
-    Returns
+    Arguments:
+    ---------
+        pass_to_excepthook: Set script to log uncaught exceptions using the created logger instance.
+
+    Returns:
     -------
         logging.Logger: The logger for the script.
 
@@ -268,7 +293,6 @@ def get_logger() -> logging.Logger:
     logger = logging.getLogger(name="main")
     logger.addFilter(DuplicateFilter())
 
-    # Create console handler with color formatting
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(ColorFormatter())
     handlers: list[logging.Handler] = [console_handler]
@@ -285,7 +309,6 @@ def get_logger() -> logging.Logger:
         logger.setLevel(logging.ERROR)
         standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
 
-        # Create file handler with standard formatting
         file_handler = RotatingFileHandler(
             filename=ROOT_DIR / "export_log.log",
             mode="a",
@@ -295,7 +318,6 @@ def get_logger() -> logging.Logger:
         )
         file_handler.setFormatter(standard_formatter)
 
-        # Create email handler with standard formatting
         email_handler = HTMLEmailHandler(
             mailhost=(settings.SMTP_HOST, SMTP_PORT),
             fromaddr=settings.SMTP_USER,
@@ -305,29 +327,16 @@ def get_logger() -> logging.Logger:
             secure=(),  # This enables TLS
         )
         email_handler.setFormatter(standard_formatter)
+        email_handler.setLevel(logging.CRITICAL)
 
         handlers.extend((file_handler, email_handler))
 
-    # Remove any existing handlers and add new ones
+    # Remove any possible existing handlers from third-party modules
     logger.handlers.clear()
     for handler in handlers:
         logger.addHandler(handler)
 
-    def handle_exception(
-        exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None
-    ) -> Any:
-        """Log all uncaught exceptions using a pre-configured logger.
-
-        When passed to sys.excepthook, you have no need for an explicit try/except block.
-        """
-        # Only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
-        if issubclass(exc_type, Exception):
-            logger.critical(
-                "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
-            )
-        else:
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-
-    sys.excepthook = handle_exception
+    if pass_to_excepthook:
+        log_to_excepthook(logger)
 
     return logger

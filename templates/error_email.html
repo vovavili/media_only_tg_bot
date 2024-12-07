@@ -1,48 +1,117 @@
 <!-- templates/error_email.html -->
+<!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-        color: #333;
-      }
-      .header {
-        background-color: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-      }
-      .error-details {
-        background-color: #fff;
-        padding: 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-      }
-      .timestamp {
-        color: #666;
-        font-size: 0.9em;
-      }
-      .level-${level_lower} {
-        color: ${level_color};
-        font-weight: bold;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h2>Application Log</h2>
-      <p class="timestamp">Timestamp: ${timestamp}</p>
-    </div>
-    <div class="error-details">
-      <p><strong>Level:</strong>
-        <span class="level-${level_lower}">${level}</span>
-      </p>
-      <p><strong>Logger:</strong> ${logger_name}</p>
-      <p><strong>Location:</strong> ${file_location}</p>
-      <p><strong>Message:</strong></p>
-      <pre>${message}</pre>
-      ${exception_info}
-    </div>
-  </body>
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+         :root {
+         --primary-color: #2d3748;
+         --secondary-color: #4a5568;
+         --border-color: #e2e8f0;
+         --background-color: #f7fafc;
+         }
+         * {
+         margin: 0;
+         padding: 0;
+         box-sizing: border-box;
+         }
+         body {
+         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+         line-height: 1.6;
+         color: var(--primary-color);
+         background-color: var(--background-color);
+         padding: 2rem;
+         }
+         .container {
+         max-width: 800px;
+         margin: 0 auto;
+         background-color: white;
+         border-radius: 8px;
+         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+         overflow: hidden;
+         }
+         .header {
+         background-color: var(--primary-color);
+         color: white;
+         padding: 1.5rem;
+         position: relative;
+         }
+         .header h2 {
+         margin: 0;
+         font-size: 1.5rem;
+         font-weight: 600;
+         }
+         .timestamp {
+         color: #cbd5e0;
+         font-size: 0.875rem;
+         margin-top: 0.5rem;
+         }
+         .error-details {
+         padding: 1.5rem;
+         }
+         .detail-row {
+         margin-bottom: 1rem;
+         padding-bottom: 1rem;
+         border-bottom: 1px solid var(--border-color);
+         }
+         .detail-row:last-child {
+         border-bottom: none;
+         }
+         .detail-label {
+         font-weight: 600;
+         color: var(--secondary-color);
+         margin-bottom: 0.25rem;
+         }
+         .level-${level_lower} {
+         display: inline-block;
+         color: white;
+         background-color: ${level_color};
+         padding: 0.25rem 0.75rem;
+         border-radius: 4px;
+         font-size: 0.875rem;
+         font-weight: 500;
+         }
+         pre {
+         background-color: var(--background-color);
+         padding: 1rem;
+         border-radius: 4px;
+         overflow-x: auto;
+         font-size: 0.875rem;
+         margin-top: 0.5rem;
+         }
+         .file-location {
+         font-family: monospace;
+         font-size: 0.875rem;
+         color: var(--secondary-color);
+         }
+      </style>
+   </head>
+   <body>
+      <div class="container">
+         <div class="header">
+            <h2>Application Log</h2>
+            <div class="timestamp">Timestamp: ${timestamp}</div>
+         </div>
+         <div class="error-details">
+            <div class="detail-row">
+               <div class="detail-label">Level</div>
+               <span class="level-${level_lower}">${level}</span>
+            </div>
+            <div class="detail-row">
+               <div class="detail-label">Logger</div>
+               <div>${logger_name}</div>
+            </div>
+            <div class="detail-row">
+               <div class="detail-label">Location</div>
+               <div class="file-location">${file_location}</div>
+            </div>
+            <div class="detail-row">
+               <div class="detail-label">Message</div>
+               <pre>${message}</pre>
+            </div>
+            ${exception_info}
+         </div>
+      </div>
+   </body>
 </html>

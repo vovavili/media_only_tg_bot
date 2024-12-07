@@ -630,7 +630,7 @@ def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -
 
     real_exception_record = logging.LogRecord(
         name="test",
-        level=logging.ERROR,
+        level=logging.CRITICAL,
         pathname="test.py",
         lineno=1,
         msg="Test message with real exception",
@@ -640,7 +640,7 @@ def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -
 
     none_exception_record = logging.LogRecord(
         name="test",
-        level=logging.ERROR,
+        level=logging.CRITICAL,
         pathname="test.py",
         lineno=1,
         msg="Test message with None exception",
@@ -657,7 +657,7 @@ def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -
         # Test real exception
         html_email_handler.emit(real_exception_record)
         real_message = str(mock_smtp_instance.send_message.call_args[0][0])
-        assert "Exception:" in real_message
+        assert "Exception" in real_message
         assert "ValueError: Test exception" in real_message
 
         # Reset mock
@@ -666,5 +666,5 @@ def test_real_vs_none_exception_handling(html_email_handler: HTMLEmailHandler) -
         # Test None exception
         html_email_handler.emit(none_exception_record)
         none_message = str(mock_smtp_instance.send_message.call_args[0][0])
-        assert "Exception:" not in none_message
+        assert "Exception" not in none_message
         assert "NoneType: None" not in none_message

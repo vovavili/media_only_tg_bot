@@ -5,30 +5,26 @@ description = "A script for a Telegram bot that deletes non-photo material from 
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
 ]
 dependencies = [
-    "pydantic[email]>=2.9.2",
-    "pydantic-settings>=2.6.1",
-    "python-telegram-bot>=21.7",
+  "pydantic[email]>=2.9.2",
+  "pydantic-settings>=2.6.1",
+  "python-telegram-bot>=21.7",
 ]
 [project.optional-dependencies]
 lint = [
-    "pylint>=3.3.1", # For now - https://github.com/astral-sh/ruff/issues/970
+  "pylint>=3.3.1", # For now - https://github.com/astral-sh/ruff/issues/970
 ]
 test = [
-    "pytest>=8.3.3",
-    "pytest-asyncio>=0.24.0",
-    "pytest-mypy-plugins>=3.1.2",
-    "pytest-cov>=6.0.0",
+  "pytest>=8.3.3",
+  "pytest-asyncio>=0.24.0",
+  "pytest-mypy-plugins>=3.1.2",
+  "pytest-cov>=6.0.0",
 ]
-dev = [
-    "ruff>=0.7.3",
-    "mypy>=1.13.0",
-    "pre-commit-uv>=4.1.4",
-]
+dev = ["ruff>=0.7.3", "mypy>=1.13.0", "pre-commit-uv>=4.1.4"]
 [tool.mypy]
 plugins = ['pydantic.mypy']
 
@@ -38,41 +34,41 @@ line-length = 100
 max-doc-length = 100
 [tool.ruff.lint]
 select = [
-    "F", # pyflakes
-    "E", # pycodestyle, errors
-    "I", # isort
-    "D", # pydocstyle, all conventions
-    "BLE", # flake8-blind-except
-    "B", # flake8-bugbear
-    "LOG", # flake8-logging
-    "G", # flake8-logging-format
-    "S", # flake8-bandit
-    "PT", # flake8-pytest-style
-    "SIM", # flake8-simplify
-    "PTH", # flake8-use-pathlib
-    "ERA", # eradicate
-    "UP", # pyupgrade
-    "FURB", # refurb
-    "PERF", # perflint
-    "TRY", # tryceratops
-    "RUF", # ruff-specific rules
-    "FA102", # Add "from __future__ import annotations" to every file
-    "PLC", # Pylint conventions
-    "PLE", # Pylint error
-    "PLW", # Pylint warnings
+  "F",     # pyflakes
+  "E",     # pycodestyle, errors
+  "I",     # isort
+  "D",     # pydocstyle, all conventions
+  "BLE",   # flake8-blind-except
+  "B",     # flake8-bugbear
+  "LOG",   # flake8-logging
+  "G",     # flake8-logging-format
+  "S",     # flake8-bandit
+  "PT",    # flake8-pytest-style
+  "SIM",   # flake8-simplify
+  "PTH",   # flake8-use-pathlib
+  "ERA",   # eradicate
+  "UP",    # pyupgrade
+  "FURB",  # refurb
+  "PERF",  # perflint
+  "TRY",   # tryceratops
+  "RUF",   # ruff-specific rules
+  "FA102", # Add "from __future__ import annotations" to every file
+  "PLC",   # Pylint conventions
+  "PLE",   # Pylint error
+  "PLW",   # Pylint warnings
 ]
 ignore = [
-    # These rules conflict with some other rules
-    "D203",
-    "D213",
-    # I do not think that long error messages are bad
-    "TRY003",
-    # It might be useful to get an abstract "raise" while testing, or to directly jump to "except"
-    "TRY301",
+  # These rules conflict with some other rules
+  "D203",
+  "D213",
+  # I do not think that long error messages are bad
+  "TRY003",
+  # It might be useful to get an abstract "raise" while testing, or to directly jump to "except"
+  "TRY301",
 ]
 logger-objects = ["src.utils.logger"]
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["D104"]  # __init__.py files can be empty
+"__init__.py" = ["D104"] # __init__.py files can be empty
 "tests/*.py" = ["S101"]  # pylint relies on asserts
 
 [tool.pytest.ini_options]
@@ -82,18 +78,15 @@ asyncio_default_fixture_loop_scope = "module"
 [tool.pylint]
 max-line-length = 100
 persistent = true
-good-names = ["P"]  # This might be useful for generics
+good-names = ["P"]    # This might be useful for generics
 
 [tool.coverage.run]
-omit = [
-    "*/__main__.py",
-    "*/__init__.py"
-]
+omit = ["*/__main__.py", "*/__init__.py"]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:"
+  "pragma: no cover",
+  "def __repr__",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
 ]
