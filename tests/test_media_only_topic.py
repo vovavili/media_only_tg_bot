@@ -240,5 +240,5 @@ def test_main(mock_application: Mock, mock_logger: Mock, monkeypatch: pytest.Mon
     mock_application.builder.assert_called_once()
     mock_app.add_handler.assert_called_once()
     mock_app.add_error_handler.assert_called_once()
-    mock_app.run_polling.assert_called_once_with(allowed_updates=["message"])
+    mock_app.run_polling.assert_called_once_with(allowed_updates=("message",))
     mock_logger.info.assert_called_with("Starting bot...")
