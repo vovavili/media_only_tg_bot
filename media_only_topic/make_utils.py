@@ -96,10 +96,9 @@ class ColorFormatter(logging.Formatter):
     @classmethod
     def get_formats(cls) -> dict[int, str]:
         """Get a dictionary of formats with proper ANSI codes for each logging level."""
+        ending = "".join((cls.INTENSITY, cls.BASE_FORMAT, cls.ESCAPE, cls.RESET))
         return {
-            level: "".join(
-                (cls.ESCAPE, color, cls.INTENSITY, cls.BASE_FORMAT, cls.ESCAPE, cls.RESET)
-            )
+            level: "".join((cls.ESCAPE, color, ending))
             for level, color in (
                 (logging.DEBUG, cls.GREY),
                 (logging.INFO, cls.GREY),
