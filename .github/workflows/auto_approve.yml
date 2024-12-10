@@ -7,6 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
-    if: github.actor in {'dependabot[bot]', 'pre-commit-ci[bot]'}
+    if: github.actor == 'dependabot[bot]' || github.actor == 'pre-commit-ci[bot]'
     steps:
       - uses: hmarr/auto-approve-action@v4
