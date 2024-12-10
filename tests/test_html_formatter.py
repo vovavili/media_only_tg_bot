@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.make_utils import (
+from media_only_topic.make_utils import (
     SMTP_PORT,
     ColorFormatter,
     DuplicateFilter,
@@ -452,9 +452,9 @@ def test_production_logger_with_html_email(email_settings: Settings) -> None:
     assert email_settings.SMTP_PASSWORD is not None
 
     with (
-        patch("src.make_utils.get_settings", return_value=email_settings),
-        patch("src.make_utils.RotatingFileHandler") as mock_file_handler,
-        patch("src.make_utils.HTMLEmailHandler") as mock_email_handler,
+        patch("media_only_topic.make_utils.get_settings", return_value=email_settings),
+        patch("media_only_topic.make_utils.RotatingFileHandler") as mock_file_handler,
+        patch("media_only_topic.make_utils.HTMLEmailHandler") as mock_email_handler,
     ):
         # Configure mocks
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)

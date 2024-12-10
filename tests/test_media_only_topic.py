@@ -10,8 +10,8 @@ import pytest
 from telegram import Chat, Message, PhotoSize, Update, User
 from telegram.ext import ContextTypes
 
-from src.make_utils import Settings
-from src.media_only_topic import ALLOWED_MESSAGE_TYPES, main, only_media_messages
+from media_only_topic.make_utils import Settings
+from media_only_topic.media_only_topic import ALLOWED_MESSAGE_TYPES, main, only_media_messages
 
 type MockGenerator = Generator[Mock, None, None]
 
@@ -20,7 +20,7 @@ type MockGenerator = Generator[Mock, None, None]
 def fixture_mock_logger(monkeypatch: pytest.MonkeyPatch) -> Mock:
     """Return the mocked logger."""
     mock_logger = Mock()
-    monkeypatch.setattr("src.media_only_topic.logger", mock_logger)
+    monkeypatch.setattr("media_only_topic.media_only_topic.logger", mock_logger)
     return mock_logger
 
 
@@ -44,7 +44,7 @@ def isolate_logger() -> Generator[None, None, None]:
 @pytest.fixture(name="message_handler")
 def fixture_message_handler() -> MockGenerator:
     """Get a mock message handler for tests."""
-    with patch("src.media_only_topic.MessageHandler") as mock:
+    with patch("media_only_topic.media_only_topic.MessageHandler") as mock:
         yield mock
 
 
@@ -138,7 +138,7 @@ async def test_production_environment(
     update = Update(update_id=1, message=message)
 
     # Mock the settings in the module being tested
-    monkeypatch.setattr("src.media_only_topic.settings", prod_settings)
+    monkeypatch.setattr("media_only_topic.media_only_topic.settings", prod_settings)
     await only_media_messages(update, context)
 
     message.delete.assert_called_once()
@@ -218,7 +218,7 @@ async def test_allowed_media_types(message: Mock, context: Mock, media_type: str
 
 
 @pytest.mark.usefixtures("message_handler")
-@patch("src.media_only_topic.Application")
+@patch("media_only_topic.media_only_topic.Application")
 def test_main(mock_application: Mock, mock_logger: Mock, monkeypatch: pytest.MonkeyPatch) -> None:
     """Test the main function."""
     # Setup mocks
@@ -231,7 +231,7 @@ def test_main(mock_application: Mock, mock_logger: Mock, monkeypatch: pytest.Mon
     mock_settings.BOT_TOKEN.get_secret_value.return_value = "test_token"
 
     # Mock the settings in the module
-    monkeypatch.setattr("src.media_only_topic.settings", mock_settings)
+    monkeypatch.setattr("media_only_topic.media_only_topic.settings", mock_settings)
 
     # Run main
     main()

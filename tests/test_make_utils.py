@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.make_utils import (
+from media_only_topic.make_utils import (
     ColorFormatter,
     DuplicateFilter,
     FileHandlerConfig,
@@ -94,7 +94,7 @@ def test_get_logger_development() -> None:
 def test_get_logger_production_without_email(prod_settings: Settings) -> None:
     """Test logger fails in production without email settings."""
     with (
-        patch("src.make_utils.get_settings", return_value=prod_settings),
+        patch("media_only_topic.make_utils.get_settings", return_value=prod_settings),
         pytest.raises(
             ValueError, match="All email environment variables are required in production"
         ),
@@ -105,9 +105,9 @@ def test_get_logger_production_without_email(prod_settings: Settings) -> None:
 def test_get_logger_production_with_email(email_settings: Settings) -> None:
     """Test logger configuration in production environment with email settings."""
     with (
-        patch("src.make_utils.get_settings", return_value=email_settings),
-        patch("src.make_utils.RotatingFileHandler") as mock_file_handler,
-        patch("src.make_utils.HTMLEmailHandler") as mock_html_handler,
+        patch("media_only_topic.make_utils.get_settings", return_value=email_settings),
+        patch("media_only_topic.make_utils.RotatingFileHandler") as mock_file_handler,
+        patch("media_only_topic.make_utils.HTMLEmailHandler") as mock_html_handler,
     ):
         # Configure mocks to return MagicMock instances
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)

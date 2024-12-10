@@ -11,7 +11,7 @@ import traceback
 from functools import wraps
 from typing import TYPE_CHECKING, overload
 
-from src.make_utils import get_logger, get_settings
+from media_only_topic.make_utils import get_logger, get_settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable

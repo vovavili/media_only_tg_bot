@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.utils import error_handler, retry
+from media_only_topic.utils import error_handler, retry
 from tests.conftest import TEST_ERROR_MESSAGE, test_function
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ async def test_error_handler() -> None:
     mock_logger = MagicMock()
 
     # Test error handling
-    with patch("src.utils.logger", mock_logger):
+    with patch("media_only_topic.utils.logger", mock_logger):
         await error_handler(None, mock_context)
         mock_logger.error.assert_called_once_with(mock_context.error)
 

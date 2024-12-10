@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.make_utils import Settings, get_settings
+from media_only_topic.make_utils import Settings, get_settings
 
 TEST_ENV_VARS: Final = {
     "BOT_TOKEN": "live_token_xyz",
@@ -59,10 +59,10 @@ def mock_utils(monkeypatch: pytest.MonkeyPatch) -> None:
     mock_settings.BOT_TOKEN.get_secret_value.return_value = "test_token"
 
     # Mock both utils.py and direct imports
-    monkeypatch.setattr("src.utils.logger", mock_logger)
-    monkeypatch.setattr("src.utils.settings", mock_settings)
-    monkeypatch.setattr("src.media_only_topic.logger", mock_logger)
-    monkeypatch.setattr("src.media_only_topic.settings", mock_settings)
+    monkeypatch.setattr("media_only_topic.utils.logger", mock_logger)
+    monkeypatch.setattr("media_only_topic.utils.settings", mock_settings)
+    monkeypatch.setattr("media_only_topic.media_only_topic.logger", mock_logger)
+    monkeypatch.setattr("media_only_topic.media_only_topic.settings", mock_settings)
 
 
 @pytest.fixture(name="settings")

@@ -81,7 +81,7 @@ persistent = true
 good-names = ["P"]    # This might be useful for generics
 
 [tool.coverage.run]
-omit = ["*/__main__.py", "*/__init__.py"]
+omit = ["*/__main__.py", "*/__init__.py", "*/__main__.py"]
 
 [tool.coverage.report]
 exclude_lines = [

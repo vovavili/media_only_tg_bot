@@ -43,7 +43,7 @@ Then, run the script:
 curl -L https://github.com/vovavili/media_only_tg_bot/archive/refs/heads/master.zip | tar -xz
 cd media_only_tg_bot-master
 # Make sure to create a .env or .env.prod file at this step
-uv run -m src.media_only_topic
+uv run -m media_only_topic
 ```
 
 Prior to running the script, please make sure your `.env` or `.env.prod` file contains the following variables. To find out 
