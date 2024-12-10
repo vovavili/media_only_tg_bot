@@ -90,3 +90,5 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+[tool.setuptools]
+packages = ["media_only_topic"]
