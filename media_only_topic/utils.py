@@ -74,7 +74,6 @@ def retry[**P, R](
                 except Exception as err:  # pylint: disable=broad-except
                     if attempt == retries:
                         last_exception = err
-                        break
                     logger.exception(traceback.format_exc())
                 time.sleep(retry_delay)
                 logger.error("Retrying, attempt %s of %s.", attempt, retries)
