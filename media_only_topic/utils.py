@@ -7,7 +7,6 @@ https://docs.astral.sh/ruff/rules/logging-exc-info/#known-problems
 from __future__ import annotations
 
 import time
-import traceback
 from functools import wraps
 from typing import TYPE_CHECKING, overload
 
@@ -67,20 +66,22 @@ def retry[**P, R](
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             """Implement a wrapper function with retry logic."""
-            last_exception = Exception()
-            for attempt in range(1, retries + 1):
+            for attempt in range(retries + 1):
                 try:
                     return func(*args, **kwargs)
                 except Exception as err:  # pylint: disable=broad-except
                     if attempt == retries:
-                        last_exception = err
-                    logger.exception(traceback.format_exc())
+                        raise type(err)(
+                            f"Failed after {retries} retr{'y' if retries == 1 else 'ies'}."
+                        ) from err
+                    logger.exception(
+                        "Retrying%s, attempt %s of %s.",
+                        "" if not retry_delay else f" in {retry_delay} seconds",
+                        attempt + 1,
+                        retries,
+                    )
                 time.sleep(retry_delay)
-                logger.error("Retrying, attempt %s of %s.", attempt, retries)
-
-            raise type(last_exception)(
-                f"Failed after {retries} retr{'y' if retries == 1 else 'ies'}."
-            ) from last_exception
+            raise AssertionError("Unreachable.")
 
         return wrapper
 
