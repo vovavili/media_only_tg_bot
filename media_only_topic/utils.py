@@ -28,13 +28,23 @@ async def error_handler(_: object, /, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 @overload
 def retry[**P, R](
-    function: None = None, /, *, retries: int = 1, retry_delay: int = 3
+    function: None = None,
+    /,
+    *,
+    retries: int = 1,
+    retry_delay: int = 3,
+    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
 @overload
 def retry[**P, R](
-    function: Callable[P, R], /, *, retries: int = 1, retry_delay: int = 3
+    function: Callable[P, R],
+    /,
+    *,
+    retries: int = 1,
+    retry_delay: int = 3,
+    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
 ) -> Callable[P, R]: ...
 
 
