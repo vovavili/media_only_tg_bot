@@ -86,7 +86,7 @@ def retry[**P, R](
             for attempt in range(retries + 1):
                 try:
                     return func(*args, **kwargs)
-                except exception_type as err:
+                except exception_type as err:  # pylint: disable=broad-except
                     if attempt == retries:
                         raise type(err)(
                             f"Failed after {retries} retr{'y' if retries == 1 else 'ies'}."
