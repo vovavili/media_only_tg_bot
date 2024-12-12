@@ -39,7 +39,12 @@ def retry[**P, R](
 
 
 def retry[**P, R](
-    function: Callable[P, R] | None = None, /, *, retries: int = 1, retry_delay: int = 3
+    function: Callable[P, R] | None = None,
+    /,
+    *,
+    retries: int = 1,
+    retry_delay: int = 3,
+    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Create a decorator to retry function execution upon failure.
 
@@ -52,6 +57,8 @@ def retry[**P, R](
         retries (int, optional): The maximum number of execution attempts. Defaults to 1.
         retry_delay (int, optional): The delay in seconds between retry attempts.
             Defaults to 3 seconds.
+        exception_type (Exception type or a tuple of Exception types, optional): Narrow down
+            on which exception types you would like to retry. Defaults to all exceptions.
 
     Returns:
         Callable: A decorator function that wraps the original function with retry logic.
@@ -69,7 +76,7 @@ def retry[**P, R](
             for attempt in range(retries + 1):
                 try:
                     return func(*args, **kwargs)
-                except Exception as err:  # pylint: disable=broad-except
+                except exception_type as err:
                     if attempt == retries:
                         raise type(err)(
                             f"Failed after {retries} retr{'y' if retries == 1 else 'ies'}."
