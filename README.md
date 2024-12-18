@@ -17,7 +17,7 @@ To run this script with the right Python version and all the dependencies, pleas
 <details>
 <summary>Installation commands for uv</summary>
 
-Install uv (and git) on Windows 11+ with PowerShell:
+Install uv on Windows 11+ with PowerShell:
 
 ```powershell
 irm https://astral.sh/uv/install.ps1 | iex; $env:Path = "$env:USERPROFILE\.local\bin;$env:Path"
