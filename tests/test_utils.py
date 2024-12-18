@@ -66,7 +66,7 @@ def test_retry_all_attempts_fail() -> None:
         decorated_func()
 
     assert "Failed after 2 retries" in str(exc_info.value)
-    assert mock_func.call_count == 2
+    assert mock_func.call_count == 3
 
 
 def test_retry_with_custom_delay() -> None:
@@ -210,7 +210,7 @@ def test_retry_with_generator_function() -> None:
     assert result == [1, 2, 3]
 
 
-@pytest.mark.parametrize(("retries", "expected_calls"), [(1, 1), (2, 2), (3, 3), (5, 5)])
+@pytest.mark.parametrize(("retries", "expected_calls"), [(1, 2), (2, 3), (3, 4), (5, 6)])
 def test_retry_different_retry_counts(retries: int, expected_calls: int) -> None:
     """Test that the decorator respects different retry counts."""
     mock_func = Mock(side_effect=ValueError("Test error"))
