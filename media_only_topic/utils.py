@@ -33,7 +33,7 @@ def retry[**P, R](
     *,
     retries: int = 1,
     retry_delay: int = 3,
-    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
+    exception_type: type[Exception] | tuple[type[Exception], ...] = Exception,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
 
 
@@ -44,7 +44,7 @@ def retry[**P, R](
     *,
     retries: int = 1,
     retry_delay: int = 3,
-    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
+    exception_type: type[Exception] | tuple[type[Exception], ...] = Exception,
 ) -> Callable[P, R]: ...
 
 
@@ -54,7 +54,7 @@ def retry[**P, R](
     *,
     retries: int = 1,
     retry_delay: int = 3,
-    exception_type: type[Exception] | tuple[type[Exception]] = Exception,
+    exception_type: type[Exception] | tuple[type[Exception], ...] = Exception,
 ) -> Callable[P, R] | Callable[[Callable[P, R]], Callable[P, R]]:
     """Create a decorator to retry function execution upon failure.
 
