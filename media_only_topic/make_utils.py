@@ -167,13 +167,6 @@ class HTMLEmailHandler(SMTPHandler):
 
     EMAIL_TEMPLATE_PATH: Final = ROOT_DIR / "templates" / "error_email.html"
 
-    @classmethod
-    def load_template(cls) -> Template:
-        """Load the HTML template from file."""
-        if not cls.EMAIL_TEMPLATE_PATH.exists():
-            raise FileNotFoundError(f"Email template not found at {cls.EMAIL_TEMPLATE_PATH}")
-        return Template(cls.EMAIL_TEMPLATE_PATH.read_text(encoding="utf-8"))
-
     @cached_property
     def error_time(self) -> str:
         """Specify the same error time for both the subject line and the timestamp."""
@@ -198,9 +191,6 @@ class HTMLEmailHandler(SMTPHandler):
             exception_text: str | None = None
             if record.exc_info and self.formatter:  # Add check for self.formatter
                 exception_text = self.formatter.formatException(record.exc_info)
-                # Add this check to filter out "NoneType: None" exceptions (e.g. for htmx logs).
-                if exception_text == "NoneType: None":
-                    exception_text = None
 
             template_vars = {
                 "timestamp": self.error_time,
@@ -220,7 +210,7 @@ class HTMLEmailHandler(SMTPHandler):
                 ),
             }
 
-            template = self.load_template()
+            template = Template(self.EMAIL_TEMPLATE_PATH.read_text(encoding="utf-8"))
             html_message = template.substitute(template_vars)
 
             part = MIMEText(html_message, "html")
@@ -330,8 +320,6 @@ def get_logger(pass_to_excepthook: bool = True) -> logging.Logger:
 
         handlers.extend((file_handler, email_handler))
 
-    # Remove any possible existing handlers from third-party modules
-    logger.handlers.clear()
     for handler in handlers:
         logger.addHandler(handler)
 
