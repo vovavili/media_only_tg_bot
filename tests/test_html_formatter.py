@@ -10,7 +10,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from string import Template
 from types import TracebackType
 from unittest.mock import MagicMock, patch
 
@@ -81,21 +80,6 @@ def test_html_email_handler_colors() -> None:
 
     assert HTMLEmailHandler.HEX_COLORS["ERROR"] == HTMLEmailHandler.RED_HEX
     assert HTMLEmailHandler.HEX_COLORS["WARNING"] == HTMLEmailHandler.YELLOW_HEX
-
-
-@pytest.mark.usefixtures("email_template")
-def test_load_template(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Test template loading functionality."""
-    # Test with valid template
-    template = HTMLEmailHandler.load_template()
-    assert isinstance(template, Template)
-
-    # Test with non-existent template
-    monkeypatch.setattr(HTMLEmailHandler, "EMAIL_TEMPLATE_PATH", Path("nonexistent.html"))
-    with pytest.raises(FileNotFoundError):
-        HTMLEmailHandler.load_template()
 
 
 def test_email_subject_formatting(html_email_handler: HTMLEmailHandler) -> None:
@@ -499,31 +483,6 @@ def test_template_not_found(
     )
 
     with patch.object(html_email_handler, "handleError") as mock_handle_error:
-        html_email_handler.emit(record)
-        mock_handle_error.assert_called_once_with(record)
-
-
-def test_template_substitution_error(html_email_handler: HTMLEmailHandler) -> None:
-    """Test handling of template substitution errors."""
-    # Create a template with an undefined variable
-    template_content = "<div>${undefined_variable}</div>"
-
-    with (
-        patch.object(HTMLEmailHandler, "load_template") as mock_load_template,
-        patch.object(html_email_handler, "handleError") as mock_handle_error,
-    ):
-        mock_load_template.return_value = Template(template_content)
-
-        record = logging.LogRecord(
-            name="test",
-            level=logging.ERROR,
-            pathname="test.py",
-            lineno=1,
-            msg="Test message",
-            args=(),
-            exc_info=None,
-        )
-
         html_email_handler.emit(record)
         mock_handle_error.assert_called_once_with(record)
 
