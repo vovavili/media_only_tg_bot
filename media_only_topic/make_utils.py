@@ -280,6 +280,9 @@ def get_logger(pass_to_excepthook: bool = True) -> logging.Logger:
 
     """
     logger = logging.getLogger(name="main")
+    # Otherwise, you might get duplicate console handlers.
+    logger.handlers.clear()
+
     logger.addFilter(DuplicateFilter())
 
     console_handler = logging.StreamHandler()
