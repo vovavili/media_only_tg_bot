@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from types import TracebackType
     from typing import ClassVar
 
-SMTP_PORT: Final = 587
 ROOT_DIR: Final = Path(__file__).resolve().parents[1]
 
 
@@ -253,6 +252,8 @@ class CustomLogger(logging.Logger):
     - For critical errors, email notification with HTML formatting
     """
 
+    SMTP_PORT: Final = 587
+
     def __init__(self, name: str = "main", pass_to_excepthook: bool = True) -> None:
         """Initialize the custom logging system.
 
@@ -299,7 +300,7 @@ class CustomLogger(logging.Logger):
             file_handler.setFormatter(standard_formatter)
 
             email_handler = HTMLEmailHandler(
-                mailhost=(settings.SMTP_HOST, SMTP_PORT),
+                mailhost=(settings.SMTP_HOST, self.SMTP_PORT),
                 fromaddr=settings.SMTP_USER,
                 toaddrs=settings.SMTP_USER,
                 subject="Application Error",
