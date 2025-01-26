@@ -18,7 +18,7 @@ from functools import cache, cached_property
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from pathlib import Path
 from string import Template
-from typing import TYPE_CHECKING, Any, Final, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal
 
 from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -26,7 +26,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 if TYPE_CHECKING:
     from collections.abc import Callable
     from types import TracebackType
-    from typing import ClassVar
 
 ROOT_DIR: Final = Path(__file__).resolve().parents[1]
 
