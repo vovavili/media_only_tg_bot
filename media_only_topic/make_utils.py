@@ -24,7 +24,9 @@ from pydantic import EmailStr, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
     from types import TracebackType
+    from typing import ClassVar
 
 SMTP_PORT: Final = 587
 ROOT_DIR: Final = Path(__file__).resolve().parents[1]
@@ -44,6 +46,7 @@ class FileHandlerConfig(IntEnum):
     BACKUP_COUNT = 5
 
 
+@cache
 class Settings(BaseSettings):
     """Statically typed validator for your .env or .env.prod file.
 
@@ -59,7 +62,12 @@ class Settings(BaseSettings):
     - SMTP_HOST - SMTP server address (e.g., smtp.gmail.com)
     - SMTP_USER - Email username/address for SMTP authentication
     - SMTP_PASSWORD - Email password or app-specific password
+
+    Caching avoids issues with unit testing by lazy evaluation. More information here:
+    https://fastapi.tiangolo.com/advanced/settings/#creating-the-settings-only-once-with-lru_cache
     """
+
+    cache_clear: ClassVar[Callable[[], None]]
 
     ENVIRONMENT: Literal["production", "development"]
 
@@ -232,16 +240,6 @@ class HTMLEmailHandler(SMTPHandler):
             self.handleError(record)
 
 
-@cache
-def get_settings() -> Settings:
-    """Avoid issues with unit testing by lazy evaluation.
-
-    More information here:
-    https://fastapi.tiangolo.com/advanced/settings/#creating-the-settings-only-once-with-lru_cache
-    """
-    return Settings()
-
-
 def log_to_excepthook(use_logger: logging.Logger) -> None:
     """Log all uncaught exceptions using a pre-configured logger.
 
@@ -292,7 +290,7 @@ def get_logger(pass_to_excepthook: bool = True) -> logging.Logger:
     console_handler.setFormatter(ColorFormatter())
     handlers: list[logging.Handler] = [console_handler]
 
-    settings = get_settings()
+    settings = Settings()
 
     # In development, set higher logging level for httpx
     if settings.ENVIRONMENT == "development":

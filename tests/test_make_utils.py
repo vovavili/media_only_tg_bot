@@ -94,7 +94,7 @@ def test_get_logger_development() -> None:
 def test_get_logger_production_without_email(prod_settings: Settings) -> None:
     """Test logger fails in production without email settings."""
     with (
-        patch("media_only_topic.make_utils.get_settings", return_value=prod_settings),
+        patch("media_only_topic.make_utils.Settings", return_value=prod_settings),
         pytest.raises(
             ValueError, match="All email environment variables are required in production"
         ),
@@ -105,7 +105,7 @@ def test_get_logger_production_without_email(prod_settings: Settings) -> None:
 def test_get_logger_production_with_email(email_settings: Settings) -> None:
     """Test logger configuration in production environment with email settings."""
     with (
-        patch("media_only_topic.make_utils.get_settings", return_value=email_settings),
+        patch("media_only_topic.make_utils.Settings", return_value=email_settings),
         patch("media_only_topic.make_utils.RotatingFileHandler") as mock_file_handler,
         patch("media_only_topic.make_utils.HTMLEmailHandler") as mock_html_handler,
     ):

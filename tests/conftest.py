@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from media_only_topic.make_utils import Settings, get_settings
+from media_only_topic.make_utils import Settings
 
 TEST_ENV_VARS: Final = {
     "BOT_TOKEN": "live_token_xyz",
@@ -77,8 +77,8 @@ def fixture_settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
     for key, value in test_env_vars.items():
         monkeypatch.setenv(key, value)
 
-    get_settings.cache_clear()  # Clear any cached settings
-    return get_settings()
+    Settings.cache_clear()  # Clear any cached settings
+    return Settings()
 
 
 @pytest.fixture(name="mock_settings")

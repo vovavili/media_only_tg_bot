@@ -10,7 +10,7 @@ import time
 from functools import wraps
 from typing import TYPE_CHECKING, overload
 
-from media_only_topic.make_utils import get_logger, get_settings
+from media_only_topic.make_utils import Settings, get_logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from telegram.ext import ContextTypes
 
 logger = get_logger()
-settings = get_settings()
+settings = Settings()
 
 
 async def error_handler(_: object, /, context: ContextTypes.DEFAULT_TYPE) -> None:
