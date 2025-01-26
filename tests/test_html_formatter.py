@@ -16,7 +16,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from media_only_topic.make_utils import (
-    SMTP_PORT,
     ColorFormatter,
     CustomLogger,
     DuplicateFilter,
@@ -453,7 +452,7 @@ def test_production_logger_with_html_email(email_settings: Settings) -> None:
 
         # Verify HTML email handler configuration
         mock_email_handler.assert_called_once_with(
-            mailhost=(email_settings.SMTP_HOST, SMTP_PORT),
+            mailhost=(email_settings.SMTP_HOST, CustomLogger.SMTP_PORT),
             fromaddr=email_settings.SMTP_USER,
             toaddrs=email_settings.SMTP_USER,
             subject="Application Error",
