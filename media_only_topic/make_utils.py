@@ -101,7 +101,7 @@ class ColorFormatter(logging.Formatter):
     BASE_FORMAT: Final = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
     @cached_property
-    def formats(self) -> dict[int, str]:
+    def format_colors(self) -> dict[int, str]:
         """Get a dictionary of formats with proper ANSI codes for each logging level."""
         ending = "".join((self.INTENSITY, self.BASE_FORMAT, self.ESCAPE, self.RESET))
         return {
@@ -120,7 +120,7 @@ class ColorFormatter(logging.Formatter):
 
         This overwrites the parent 'format' method.
         """
-        log_fmt = self.formats.get(record.levelno, self.BASE_FORMAT)
+        log_fmt = self.format_colors.get(record.levelno, self.BASE_FORMAT)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
