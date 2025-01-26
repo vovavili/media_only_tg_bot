@@ -245,10 +245,12 @@ class CustomLogger(logging.Logger):
 
     The logging system will have the following traits:
     - Color formatting in terminals
-    - No info/debug messages in production
-    - Rotating file handler, for production
-    - For critical errors in production, email notification with HTML formatting
     - An ability to log exceptions without explicit try/except blocks
+
+    The following traits apply only in production:
+    - No info/debug messages
+    - Rotating file handler
+    - For critical errors, email notification with HTML formatting
     """
 
     def __init__(self, name: str = "main", pass_to_excepthook: bool = True) -> None:
