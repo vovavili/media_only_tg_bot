@@ -240,94 +240,98 @@ class HTMLEmailHandler(SMTPHandler):
             self.handleError(record)
 
 
-def log_to_excepthook(use_logger: logging.Logger) -> None:
-    """Log all uncaught exceptions using a pre-configured logger.
-
-    When passed to sys.excepthook, you have no need for an explicit try/except block.
-    """
-
-    def handle_exception(
-        exc_type: type[BaseException], exc_value: BaseException, exc_traceback: TracebackType | None
-    ) -> Any:
-        """Handle with the right signature that is passed to sys.excepthook."""
-        # Only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
-        if issubclass(exc_type, Exception):
-            use_logger.critical(
-                "Encountered an uncaught exception.", exc_info=(exc_type, exc_value, exc_traceback)
-            )
-        else:
-            sys.__excepthook__(exc_type, exc_value, exc_traceback)
-
-    sys.excepthook = handle_exception
-
-
-def get_logger(pass_to_excepthook: bool = True) -> logging.Logger:
-    """Initialize the logging system.
+class CustomLogger(logging.Logger):
+    """A logging system with highly desirable configurations.
 
     The logging system will have the following traits:
-        - Color formatting in terminals
-        - No info/debug messages in production
-        - Rotating file handler, for production
-        - For critical errors in production, email notification with HTML formatting
-        - An ability to log exceptions without explicit try/except blocks
-
-    Arguments:
-    ---------
-        pass_to_excepthook: Set script to log uncaught exceptions using the created logger instance.
-
-    Returns:
-    -------
-        logging.Logger: The logger for the script.
-
+    - Color formatting in terminals
+    - No info/debug messages in production
+    - Rotating file handler, for production
+    - For critical errors in production, email notification with HTML formatting
+    - An ability to log exceptions without explicit try/except blocks
     """
-    logger = logging.getLogger(name="main")
-    # Otherwise, you might get duplicate console handlers.
-    logger.handlers.clear()
 
-    logger.addFilter(DuplicateFilter())
+    def __init__(self, name: str = "main", pass_to_excepthook: bool = True) -> None:
+        """Initialize the custom logging system.
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(ColorFormatter())
-    handlers: list[logging.Handler] = [console_handler]
+        Arguments:
+        ---------
+            name: The name of the logger instance.
+            pass_to_excepthook: Set script to log uncaught exceptions using this logger instance.
 
-    settings = Settings()
+        """
+        super().__init__(name)
 
-    # In development, set higher logging level for httpx
-    if settings.ENVIRONMENT == "development":
-        logger.setLevel(logging.INFO)
-        logging.getLogger(name="httpx").setLevel(logging.WARNING)
-    elif settings.SMTP_HOST is None or settings.SMTP_USER is None or settings.SMTP_PASSWORD is None:
-        raise ValueError("All email environment variables are required in production.")
-    else:
-        logger.setLevel(logging.ERROR)
-        standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
+        # Otherwise, you might get duplicate console handlers.
+        self.handlers.clear()
 
-        file_handler = RotatingFileHandler(
-            filename=ROOT_DIR / "export_log.log",
-            mode="a",
-            maxBytes=FileHandlerConfig.MAX_BYTES,
-            backupCount=FileHandlerConfig.BACKUP_COUNT,
-            encoding="utf-8",
+        self.addFilter(DuplicateFilter())
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(ColorFormatter())
+        handlers: list[logging.Handler] = [console_handler]
+
+        settings = Settings()
+
+        # In development, set higher logging level for httpx
+        if settings.ENVIRONMENT == "development":
+            self.setLevel(logging.INFO)
+            logging.getLogger(name="httpx").setLevel(logging.WARNING)
+        elif (
+            settings.SMTP_HOST is None
+            or settings.SMTP_USER is None
+            or settings.SMTP_PASSWORD is None
+        ):
+            raise ValueError("All email environment variables are required in production.")
+        else:
+            self.setLevel(logging.ERROR)
+            standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
+
+            file_handler = RotatingFileHandler(
+                filename=ROOT_DIR / "export_log.log",
+                mode="a",
+                maxBytes=FileHandlerConfig.MAX_BYTES,
+                backupCount=FileHandlerConfig.BACKUP_COUNT,
+                encoding="utf-8",
+            )
+            file_handler.setFormatter(standard_formatter)
+
+            email_handler = HTMLEmailHandler(
+                mailhost=(settings.SMTP_HOST, SMTP_PORT),
+                fromaddr=settings.SMTP_USER,
+                toaddrs=settings.SMTP_USER,
+                subject="Application Error",
+                credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
+                secure=(),  # This enables TLS
+            )
+            email_handler.setFormatter(standard_formatter)
+            email_handler.setLevel(logging.CRITICAL)
+
+            handlers.extend((file_handler, email_handler))
+
+        for handler in handlers:
+            self.addHandler(handler)
+
+        if pass_to_excepthook:
+            sys.excepthook = self.handle_exception
+
+    def handle_exception(
+        self,
+        exc_type: type[BaseException],
+        exc_value: BaseException,
+        exc_traceback: TracebackType | None,
+    ) -> Any:
+        """Log all uncaught exceptions using this logger instance.
+
+        We only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
+        When passed to sys.excepthook, you have no need for an explicit try/except block.
+        """
+        #
+        (
+            self.critical(
+                "Encountered an uncaught exception.",
+                exc_info=(exc_type, exc_value, exc_traceback),
+            )
+            if issubclass(exc_type, Exception)
+            else sys.__excepthook__(exc_type, exc_value, exc_traceback)
         )
-        file_handler.setFormatter(standard_formatter)
-
-        email_handler = HTMLEmailHandler(
-            mailhost=(settings.SMTP_HOST, SMTP_PORT),
-            fromaddr=settings.SMTP_USER,
-            toaddrs=settings.SMTP_USER,
-            subject="Application Error",
-            credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
-            secure=(),  # This enables TLS
-        )
-        email_handler.setFormatter(standard_formatter)
-        email_handler.setLevel(logging.CRITICAL)
-
-        handlers.extend((file_handler, email_handler))
-
-    for handler in handlers:
-        logger.addHandler(handler)
-
-    if pass_to_excepthook:
-        log_to_excepthook(logger)
-
-    return logger

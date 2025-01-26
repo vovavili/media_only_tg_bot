@@ -6,18 +6,20 @@ https://docs.astral.sh/ruff/rules/logging-exc-info/#known-problems
 
 from __future__ import annotations
 
+import logging
 import time
 from functools import wraps
 from typing import TYPE_CHECKING, overload
 
-from media_only_topic.make_utils import Settings, get_logger
+from media_only_topic.make_utils import CustomLogger, Settings
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from telegram.ext import ContextTypes
 
-logger = get_logger()
+logging.setLoggerClass(CustomLogger)
+logger = logging.getLogger("main")
 settings = Settings()
 
 

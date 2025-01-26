@@ -18,10 +18,10 @@ import pytest
 from media_only_topic.make_utils import (
     SMTP_PORT,
     ColorFormatter,
+    CustomLogger,
     DuplicateFilter,
     HTMLEmailHandler,
     Settings,
-    get_logger,
 )
 from tests.conftest import create_log_record
 
@@ -444,7 +444,8 @@ def test_production_logger_with_html_email(email_settings: Settings) -> None:
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)
         mock_email_handler.return_value = MagicMock(spec=HTMLEmailHandler)
 
-        logger = get_logger()
+        logging.setLoggerClass(CustomLogger)
+        logger = logging.getLogger(f"test_logger_{id(email_settings)}")
 
         # Verify logger configuration
         assert logger.level == logging.ERROR

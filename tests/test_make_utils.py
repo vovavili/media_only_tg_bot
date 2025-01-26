@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+import uuid
 from collections.abc import Generator
 from logging.handlers import RotatingFileHandler, SMTPHandler
 from unittest.mock import MagicMock, patch
@@ -12,10 +13,10 @@ import pytest
 
 from media_only_topic.make_utils import (
     ColorFormatter,
+    CustomLogger,
     DuplicateFilter,
     FileHandlerConfig,
     Settings,
-    get_logger,
 )
 from tests.conftest import TEST_ERROR_MESSAGE, create_log_record
 
@@ -79,7 +80,8 @@ def test_settings_production(prod_settings: Settings) -> None:
 @pytest.mark.usefixtures("settings")
 def test_get_logger_development() -> None:
     """Test logger configuration in development environment."""
-    logger = get_logger()
+    logging.setLoggerClass(CustomLogger)
+    logger = logging.getLogger(f"main_{uuid.uuid4()}")
 
     assert logger.level == logging.INFO
     assert len(logger.handlers) == 1
@@ -93,13 +95,14 @@ def test_get_logger_development() -> None:
 
 def test_get_logger_production_without_email(prod_settings: Settings) -> None:
     """Test logger fails in production without email settings."""
+    logging.setLoggerClass(CustomLogger)
     with (
         patch("media_only_topic.make_utils.Settings", return_value=prod_settings),
         pytest.raises(
             ValueError, match="All email environment variables are required in production"
         ),
     ):
-        get_logger()
+        _ = logging.getLogger(f"main_{uuid.uuid4()}")
 
 
 def test_get_logger_production_with_email(email_settings: Settings) -> None:
@@ -113,7 +116,8 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
         mock_file_handler.return_value = MagicMock(spec=RotatingFileHandler)
         mock_html_handler.return_value = MagicMock(spec=SMTPHandler)
 
-        logger = get_logger()
+        logging.setLoggerClass(CustomLogger)
+        logger = logging.getLogger(f"main_{uuid.uuid4()}")
 
         # Verify logger configuration
         assert logger.level == logging.ERROR
@@ -136,7 +140,8 @@ def test_get_logger_production_with_email(email_settings: Settings) -> None:
 @pytest.mark.usefixtures("email_settings")
 def test_exception_hook() -> None:
     """Test the custom exception hook logs uncaught exceptions."""
-    logger = get_logger()
+    logging.setLoggerClass(CustomLogger)
+    logger = logging.getLogger(f"main_{uuid.uuid4()}")
 
     with patch.object(logger, "critical") as mock_critical:
         # Simulate an uncaught exception
@@ -155,7 +160,8 @@ def test_exception_hook() -> None:
 @pytest.mark.usefixtures("email_settings")
 def test_keyboard_interrupt_handling() -> None:
     """Test that KeyboardInterrupt is handled specially."""
-    logger = get_logger()
+    logging.setLoggerClass(CustomLogger)
+    logger = logging.getLogger("main")
 
     with (
         patch.object(logger, "critical") as mock_critical,
