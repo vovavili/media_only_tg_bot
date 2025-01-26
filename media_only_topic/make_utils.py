@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import html
+import json
 import logging
 import smtplib
 import sys
@@ -122,6 +123,32 @@ class ColorFormatter(logging.Formatter):
         log_fmt = self.formats.get(record.levelno, self.BASE_FORMAT)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
+
+
+class JsonFormatter(logging.Formatter):
+    """Formatter for machine-readable structured logging in files."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format the logging message in machine-readable JSON format.
+
+        This overwrites the parent 'format' method.
+        """
+        log_record = {
+            "timestamp": self.formatTime(record),
+            "name": record.name,
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module,
+            "function": record.funcName,
+            "line_number": record.lineno,
+            "path": record.pathname,
+        }
+        if record.exc_info:
+            log_record["exception"] = self.formatException(record.exc_info)
+        # Add custom fields from extra
+        if hasattr(record, "extra_fields"):
+            log_record.update(record.extra_fields)
+        return json.dumps(log_record)
 
 
 # pylint: disable=too-few-public-methods
@@ -247,7 +274,7 @@ class CustomLogger(logging.Logger):
 
     The following traits apply only in production:
     - No info/debug messages
-    - Rotating file handler
+    - Rotating file handler with structured logging
     - For critical errors, email notification with HTML formatting
     """
 
@@ -287,7 +314,6 @@ class CustomLogger(logging.Logger):
             raise ValueError("All email environment variables are required in production.")
         else:
             self.setLevel(logging.ERROR)
-            standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
 
             file_handler = RotatingFileHandler(
                 filename=ROOT_DIR / "export_log.log",
@@ -296,7 +322,7 @@ class CustomLogger(logging.Logger):
                 backupCount=FileHandlerConfig.BACKUP_COUNT,
                 encoding="utf-8",
             )
-            file_handler.setFormatter(standard_formatter)
+            file_handler.setFormatter(JsonFormatter())
 
             email_handler = HTMLEmailHandler(
                 mailhost=(settings.SMTP_HOST, self.SMTP_PORT),
@@ -306,6 +332,7 @@ class CustomLogger(logging.Logger):
                 credentials=(settings.SMTP_USER, settings.SMTP_PASSWORD.get_secret_value()),
                 secure=(),  # This enables TLS
             )
+            standard_formatter = logging.Formatter(ColorFormatter.BASE_FORMAT)
             email_handler.setFormatter(standard_formatter)
             email_handler.setLevel(logging.CRITICAL)
 
