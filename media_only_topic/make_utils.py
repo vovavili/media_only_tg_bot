@@ -328,11 +328,10 @@ class CustomLogger(logging.Logger):
         We only log userspace exceptions (e.g. so a console Python program can exit with Ctrl + C).
         When passed to sys.excepthook, you have no need for an explicit try/except block.
         """
-        (
+        if issubclass(exc_type, Exception):
             self.critical(
                 "Encountered an uncaught exception.",
                 exc_info=(exc_type, exc_value, exc_traceback),
             )
-            if issubclass(exc_type, Exception)
-            else sys.__excepthook__(exc_type, exc_value, exc_traceback)
-        )
+        else:
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
