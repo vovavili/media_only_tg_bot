@@ -145,6 +145,8 @@ class JsonFormatter(logging.Formatter):
         }
         if record.exc_info:
             log_record["exception"] = self.formatException(record.exc_info)
+        if record.stack_info:
+            log_record["stack_info"] = self.formatStack(record.stack_info)
         # Add custom fields from extra
         if hasattr(record, "extra_fields"):
             log_record.update(record.extra_fields)
@@ -157,6 +159,8 @@ class DuplicateFilter(logging.Filter):
 
     This is useful for something like htmx errors, which tend to repeat frequently.
     """
+
+    __slots__ = ("last_log", "name", "nlen")
 
     def __init__(self, name: str = "") -> None:
         """Initialize a logging filter while keeping track of the last log."""
