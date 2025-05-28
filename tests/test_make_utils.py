@@ -45,7 +45,7 @@ def test_filehandler_config() -> None:
 def test_color_formatter() -> None:
     """Test ColorFormatter functionality."""
     formatter = ColorFormatter()
-    formats = formatter.formats
+    formats = formatter.format_colors
 
     # Test that all log levels have appropriate formats
     assert all(isinstance(fmt, str) for fmt in formats.values())
